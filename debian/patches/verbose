@@ -1,12 +1,18 @@
-Author: Michael R. Crusoe <crusoe@debian.org>
-Description: make the build more verbose
+From: "Michael R. Crusoe" <crusoe@debian.org>
+Date: Sat, 2 Apr 2022 17:49:43 -0400
+Subject: make the build more verbose
+
 Forwarded: not-needed
+---
+ setup.py | 1 +
+ 1 file changed, 1 insertion(+)
+
 --- mypy.orig/setup.py
 +++ mypy/setup.py
-@@ -151,6 +151,7 @@
+@@ -165,6 +165,7 @@
          # Use multi-file compilation mode on windows because without it
          # our Appveyor builds run out of memory sometimes.
-         multi_file=sys.platform == 'win32' or force_multifile,
+         multi_file=sys.platform == "win32" or force_multifile,
 +        verbose=True,
      )
  else:

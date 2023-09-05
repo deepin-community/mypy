@@ -1,37 +1,41 @@
 Source: mypy
-Maintainer: Debian Med Packaging Team <debian-med-packaging@lists.alioth.debian.org>
+Maintainer: Debian Python Team <team+python@tracker.debian.org>
 Uploaders: Michael R. Crusoe <crusoe@debian.org>
 Section: utils
 Testsuite: autopkgtest-pkg-python
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
-               dh-python,
+               dh-sequence-python3,
+               python3-setuptools,
+               pybuild-plugin-pyproject,
+               python3-wheel,
                flake8,
                help2man,
                python3-all,
                python3-lxml,
+               python3-attr <!nocheck>,
                python3-pytest-xdist <!nocheck>,
                python3-pytest-cov <!nocheck>,
-               python3-setuptools,
                python3-sphinx <!nodoc>,
-               python3-sphinx-rtd-theme <!nodoc>,
-               python3-typed-ast,
-               python3-typed-ast (<< 1.5.0),
+               furo <!nodoc>,
                python3-typeshed,
                python3-psutil,
                python3-mypy-extensions,
                python3-typing-extensions,
                python3-virtualenv <!nocheck>,
+               python3-typeshed <!nocheck>,
                python3-all-dev,
+               python3-tomli,
+               python3-venv <!nocheck>,
                python3-doc <!nodoc>,
                cython-doc <!nodoc>,
                python-six-doc <!nodoc>,
                python-setuptools-doc <!nodoc>,
                python-attr-doc <!nodoc>
-Standards-Version: 4.6.0
-Vcs-Browser: https://salsa.debian.org/med-team/mypy
-Vcs-Git: https://salsa.debian.org/med-team/mypy.git
-Homepage: http://www.mypy-lang.org/
+Standards-Version: 4.6.2
+Vcs-Browser: https://salsa.debian.org/python-team/packages/mypy
+Vcs-Git: https://salsa.debian.org/python-team/packages/mypy.git
+Homepage: https://www.mypy-lang.org/
 Rules-Requires-Root: no
 
 Package: mypy
@@ -39,10 +43,8 @@ Architecture: all
 Depends: ${misc:Depends},
          ${python3:Depends},
          python3-mypy (>= ${binary:Version})
-Suggests: mypy-doc
-Breaks: python3-mypy (= 0.740-1)
-Replaces: python3-mypy (= 0.740-1)
 Recommends: python3-typeshed
+Suggests: mypy-doc
 Description: optional static typing for Python
  Add type annotations to your Python programs, and use mypy to type check them.
  Mypy is essentially a Python linter on steroids, and it can catch many
@@ -54,6 +56,7 @@ Description: optional static typing for Python
 
 Package: mypy-doc
 Architecture: all
+Multi-Arch: foreign
 Section: doc
 Depends: ${misc:Depends},
          ${sphinxdoc:Depends}
@@ -79,12 +82,11 @@ Section: python
 Depends: ${misc:Depends},
          ${python3:Depends},
          ${shlibs:Depends},
-         python3-typed-ast,
          python3-mypy-extensions,
          python3-psutil,
-         python3-distutils,
          python3-pkg-resources
-Recommends: python3-lxml
+Recommends: python3-lxml,
+            python3-setuptools
 Description: public modules for mypy (Python 3)
  Add type annotations to your Python programs, and use mypy to type check them.
  Mypy is essentially a Python linter on steroids, and it can catch many

@@ -63,6 +63,8 @@ classes:
 * ``IndexError``
 * ``LookupError``
 * ``UserWarning``
+* ``typing.NamedTuple``
+* ``enum.Enum``
 
 By default, a non-native class can't inherit a native class, and you
 can't inherit from a native class outside the compilation unit that
@@ -103,6 +105,11 @@ through an instance. Example::
     o = Cls()
     print(o.cv)  # OK (2)
     o.cv = 3  # Error!
+
+.. tip::
+
+    Constant class variables can be declared using ``typing.Final`` or
+    ``typing.Final[<type>]``.
 
 Generic native classes
 ----------------------
@@ -150,14 +157,48 @@ decorators can be used with native classes, however:
 * ``mypy_extensions.trait`` (for defining :ref:`trait types <trait-types>`)
 * ``mypy_extensions.mypyc_attr`` (see :ref:`above <inheritance>`)
 * ``dataclasses.dataclass``
+* ``@attr.s(auto_attribs=True)``
 
-Dataclasses have partial native support, and they aren't as efficient
-as pure native classes.
+Dataclasses and attrs classes have partial native support, and they aren't as
+efficient as pure native classes.
 
 .. note::
 
    If a class definition uses an unsupported class decorator, *mypyc
    compiles the class into a regular Python class*.
+
+Deleting attributes
+-------------------
+
+By default, attributes defined in native classes can't be deleted. You
+can explicitly allow certain attributes to be deleted by using
+``__deletable__``::
+
+   class Cls:
+       x: int = 0
+       y: int = 0
+       other: int = 0
+
+       __deletable__ = ['x', 'y']  # 'x' and 'y' can be deleted
+
+   o = Cls()
+   del o.x  # OK
+   del o.y  # OK
+   del o.other  # Error
+
+You must initialize the ``__deletable__`` attribute in the class body,
+using a list or a tuple expression with only string literal items that
+refer to attributes. These are not valid::
+
+   a = ['x', 'y']
+
+   class Cls:
+       x: int
+       y: int
+
+       __deletable__ = a  # Error: cannot use variable 'a'
+
+   __deletable__ = ('a',)  # Error: not in a class body
 
 Other properties
 ----------------

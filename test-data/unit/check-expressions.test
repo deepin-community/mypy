@@ -13,11 +13,12 @@
 
 [case testNoneAsRvalue]
 import typing
-a = None # type: A
+a: A
 class A: pass
 [out]
 
 [case testNoneAsArgument]
+# flags: --no-strict-optional
 import typing
 def f(x: 'A', y: 'B') -> None: pass
 f(None, None)
@@ -32,7 +33,7 @@ class B(A): pass
 
 [case testIntLiteral]
 a = 0
-b = None # type: A
+b: A
 if int():
     b = 1 # E: Incompatible types in assignment (expression has type "int", variable has type "A")
 if int():
@@ -42,7 +43,7 @@ class A:
 
 [case testStrLiteral]
 a = ''
-b = None # type: A
+b: A
 if int():
     b = 'x' # E: Incompatible types in assignment (expression has type "str", variable has type "A")
 if int():
@@ -56,40 +57,29 @@ class A:
 
 [case testFloatLiteral]
 a = 0.0
-b = None # type: A
+b: A
 if str():
     b = 1.1 # E: Incompatible types in assignment (expression has type "float", variable has type "A")
 if str():
     a = 1.1
 class A:
     pass
-[file builtins.py]
-class object:
-    def __init__(self): pass
-class type: pass
-class function: pass
-class float: pass
-class str: pass
+[builtins fixtures/dict.pyi]
 
 [case testComplexLiteral]
 a = 0.0j
-b = None # type: A
+b: A
 if str():
     b = 1.1j # E: Incompatible types in assignment (expression has type "complex", variable has type "A")
 if str():
     a = 1.1j
 class A:
     pass
-[file builtins.py]
-class object:
-    def __init__(self): pass
-class type: pass
-class function: pass
-class complex: pass
-class str: pass
+[builtins fixtures/dict.pyi]
 
 [case testBytesLiteral]
-b, a = None, None # type: (bytes, A)
+b: bytes
+a: A
 if str():
     b = b'foo'
 if str():
@@ -99,20 +89,13 @@ if str():
 if str():
     a = b'foo' # E: Incompatible types in assignment (expression has type "bytes", variable has type "A")
 class A: pass
-[file builtins.py]
-class object:
-    def __init__(self): pass
-class type: pass
-class tuple: pass
-class function: pass
-class bytes: pass
-class str: pass
+[builtins fixtures/dict.pyi]
 
 [case testUnicodeLiteralInPython3]
-s = None  # type: str
+s: str
 if int():
     s = u'foo'
-b = None  # type: bytes
+b: bytes
 if int():
     b = u'foo' # E: Incompatible types in assignment (expression has type "str", variable has type "bytes")
 [builtins fixtures/primitives.pyi]
@@ -123,7 +106,9 @@ if int():
 
 
 [case testAdd]
-a, b, c = None, None, None # type: (A, B, C)
+a: A
+b: B
+c: C
 if int():
     c = a + c  # E: Unsupported operand types for + ("A" and "C")
 if int():
@@ -143,7 +128,9 @@ class C:
 [builtins fixtures/tuple.pyi]
 
 [case testSub]
-a, b, c = None, None, None # type: (A, B, C)
+a: A
+b: B
+c: C
 if int():
     c = a - c  # E: Unsupported operand types for - ("A" and "C")
 if int():
@@ -163,7 +150,9 @@ class C:
 [builtins fixtures/tuple.pyi]
 
 [case testMul]
-a, b, c = None, None, None # type: (A, B, C)
+a: A
+b: B
+c: C
 if int():
     c = a * c  # E: Unsupported operand types for * ("A" and "C")
 if int():
@@ -183,7 +172,9 @@ class C:
 [builtins fixtures/tuple.pyi]
 
 [case testMatMul]
-a, b, c = None, None, None # type: (A, B, C)
+a: A
+b: B
+c: C
 if int():
     c = a @ c  # E: Unsupported operand types for @ ("A" and "C")
 if int():
@@ -203,7 +194,9 @@ class C:
 [builtins fixtures/tuple.pyi]
 
 [case testDiv]
-a, b, c = None, None, None # type: (A, B, C)
+a: A
+b: B
+c: C
 if int():
     c = a / c  # E: Unsupported operand types for / ("A" and "C")
     a = a / b  # E: Incompatible types in assignment (expression has type "C", variable has type "A")
@@ -222,7 +215,9 @@ class C:
 [builtins fixtures/tuple.pyi]
 
 [case testIntDiv]
-a, b, c = None, None, None # type: (A, B, C)
+a: A
+b: B
+c: C
 if int():
     c = a // c  # E: Unsupported operand types for // ("A" and "C")
     a = a // b  # E: Incompatible types in assignment (expression has type "C", variable has type "A")
@@ -241,7 +236,9 @@ class C:
 [builtins fixtures/tuple.pyi]
 
 [case testMod]
-a, b, c = None, None, None # type: (A, B, C)
+a: A
+b: B
+c: C
 if int():
     c = a % c  # E: Unsupported operand types for % ("A" and "C")
 if int():
@@ -261,7 +258,9 @@ class C:
 [builtins fixtures/tuple.pyi]
 
 [case testPow]
-a, b, c = None, None, None # type: (A, B, C)
+a: A
+b: B
+c: C
 if int():
     c = a ** c  # E: Unsupported operand types for ** ("A" and "C")
 if int():
@@ -281,8 +280,8 @@ class C:
 [builtins fixtures/tuple.pyi]
 
 [case testMiscBinaryOperators]
-
-a, b = None, None # type: (A, B)
+a: A
+b: B
 b = a & a  # Fail
 b = a | b  # Fail
 b = a ^ a  # Fail
@@ -310,17 +309,18 @@ main:6: error: Unsupported operand types for << ("A" and "B")
 main:7: error: Unsupported operand types for >> ("A" and "A")
 
 [case testBooleanAndOr]
-a, b = None, None # type: (A, bool)
+a: A
+b: bool
 if int():
     b = b and b
 if int():
     b = b or b
 if int():
-    b = b and a # E: Incompatible types in assignment (expression has type "Union[bool, A]", variable has type "bool")
+    b = b and a # E: Incompatible types in assignment (expression has type "Union[Literal[False], A]", variable has type "bool")
 if int():
     b = a and b # E: Incompatible types in assignment (expression has type "Union[A, bool]", variable has type "bool")
 if int():
-    b = b or a  # E: Incompatible types in assignment (expression has type "Union[bool, A]", variable has type "bool")
+    b = b or a  # E: Incompatible types in assignment (expression has type "Union[Literal[True], A]", variable has type "bool")
 if int():
     b = a or b  # E: Incompatible types in assignment (expression has type "Union[A, bool]", variable has type "bool")
 class A: pass
@@ -329,8 +329,8 @@ class A: pass
 
 [case testRestrictedTypeAnd]
 
-b = None # type: bool
-i = None # type: str
+b: bool
+i: str
 j = not b and i
 if j:
     reveal_type(j) # N: Revealed type is "builtins.str"
@@ -338,8 +338,8 @@ if j:
 
 [case testRestrictedTypeOr]
 
-b = None # type: bool
-i = None # type: str
+b: bool
+i: str
 j = b or i
 if not j:
     reveal_type(j) # N: Revealed type is "builtins.str"
@@ -362,7 +362,9 @@ def f(a: List[str], b: bool) -> bool:
 [builtins fixtures/list.pyi]
 
 [case testNonBooleanOr]
-c, d, b = None, None, None # type: (C, D, bool)
+c: C
+d: D
+b: bool
 if int():
     c = c or c
 if int():
@@ -381,7 +383,11 @@ class D(C): pass
 
 [case testInOperator]
 from typing import Iterator, Iterable, Any
-a, b, c, d, e = None, None, None, None, None # type: (A, B, bool, D, Any)
+a: A
+b: B
+c: bool
+d: D
+e: Any
 if int():
     c = c in a  # E: Unsupported operand types for in ("bool" and "A")
 if int():
@@ -408,7 +414,11 @@ class D(Iterable[A]):
 
 [case testNotInOperator]
 from typing import Iterator, Iterable, Any
-a, b, c, d, e = None, None, None, None, None # type: (A, B, bool, D, Any)
+a: A
+b: B
+c: bool
+d: D
+e: Any
 if int():
     c = c not in a  # E: Unsupported operand types for in ("bool" and "A")
 if int():
@@ -434,18 +444,20 @@ class D(Iterable[A]):
 [builtins fixtures/bool.pyi]
 
 [case testNonBooleanContainsReturnValue]
-a, b, c = None, None, None # type: (A, bool, int)
+a: A
+b: bool
+c: str
 if int():
     b = a not in a
 if int():
     b = a in a
 if int():
-    c = a not in a  # E: Incompatible types in assignment (expression has type "bool", variable has type "int")
+    c = a not in a  # E: Incompatible types in assignment (expression has type "bool", variable has type "str")
 if int():
-    c = a in a  # E: Incompatible types in assignment (expression has type "bool", variable has type "int")
+    c = a in a  # E: Incompatible types in assignment (expression has type "bool", variable has type "str")
 
 class A:
-  def __contains__(self, x: 'A') -> int: pass
+  def __contains__(self, x: 'A') -> str: pass
 [builtins fixtures/bool.pyi]
 
 [case testInWithInvalidArgs]
@@ -453,8 +465,8 @@ a = 1 in ([1] + ['x'])  # E: List item 0 has incompatible type "str"; expected "
 [builtins fixtures/list.pyi]
 
 [case testEq]
-
-a, b = None, None # type: (A, bool)
+a: A
+b: bool
 if int():
     a = a == b # E: Incompatible types in assignment (expression has type "bool", variable has type "A")
 if int():
@@ -470,7 +482,9 @@ class A:
 [builtins fixtures/bool.pyi]
 
 [case testLtAndGt]
-a, b, bo = None, None, None # type: (A, B, bool)
+a: A
+b: B
+bo: bool
 if int():
     a = a < b # E: Incompatible types in assignment (expression has type "bool", variable has type "A")
 if int():
@@ -488,65 +502,22 @@ class B:
     def __gt__(self, o: 'B') -> bool: pass
 [builtins fixtures/bool.pyi]
 
-[case testCmp_python2]
-
-a, b, c, bo = None, None, None, None # type: (A, B, C, bool)
-bo = a == a  # E: Unsupported operand types for == ("A" and "A")
-bo = a != a  # E: Unsupported operand types for comparison ("A" and "A")
-bo = a < b
-bo = a > b
-bo = b <= b
-bo = b <= c
-bo = b >= c  # E: Unsupported operand types for comparison ("C" and "B")
-bo = a >= b
-bo = c >= b
-bo = c <= b  # E: Unsupported operand types for comparison ("B" and "C")
-bo = a == c
-bo = b == c  # E: Unsupported operand types for == ("C" and "B")
-
-class A:
-    def __cmp__(self, o):
-      # type: ('B') -> bool
-      pass
-    def __eq__(self, o):
-      # type: ('int') -> bool
-      pass
-class B:
-    def __cmp__(self, o):
-        # type: ('B') -> bool
-        pass
-    def __le__(self, o):
-        # type: ('C') -> bool
-        pass
-class C:
-    def __cmp__(self, o):
-      # type: ('A') -> bool
-      pass
-    def __eq__(self, o):
-      # type: ('int') -> bool
-      pass
-
-[builtins_py2 fixtures/bool_py2.pyi]
-
-[case testDiv_python2]
-10 / 'no'  # E: Unsupported operand types for / ("int" and "str")
-'no' / 10  # E: Unsupported operand types for / ("str" and "int")
-[builtins_py2 fixtures/ops.pyi]
-
 [case cmpIgnoredPy3]
-
-a, b, bo = None, None, None # type: (A, B, bool)
+a: A
+b: B
+bo: bool
 bo = a <= b # E: Unsupported left operand type for <= ("A")
 
 class A:
     def __cmp__(self, o: 'B') -> bool: pass
 class B:
     pass
-
 [builtins fixtures/bool.pyi]
 
 [case testLeAndGe]
-a, b, bo = None, None, None # type: (A, B, bool)
+a: A
+b: B
+bo: bool
 if int():
     a = a <= b # E: Incompatible types in assignment (expression has type "bool", variable has type "A")
 if int():
@@ -565,8 +536,9 @@ class B:
 [builtins fixtures/bool.pyi]
 
 [case testChainedComp]
-
-a, b, bo = None, None, None # type: (A, B, bool)
+a: A
+b: B
+bo: bool
 a < a < b < b # Fail
 a < b < b < b
 a < a > a < b # Fail
@@ -579,13 +551,15 @@ class B:
     def __gt__(self, o: 'B') -> bool: pass
 [builtins fixtures/bool.pyi]
 [out]
-main:3: error: Unsupported operand types for < ("A" and "A")
-main:5: error: Unsupported operand types for < ("A" and "A")
-main:5: error: Unsupported operand types for > ("A" and "A")
+main:4: error: Unsupported operand types for < ("A" and "A")
+main:6: error: Unsupported operand types for < ("A" and "A")
+main:6: error: Unsupported operand types for > ("A" and "A")
 
 
 [case testChainedCompBoolRes]
-a, b, bo = None, None, None # type: (A, B, bool)
+a: A
+b: B
+bo: bool
 if int():
     bo = a < b < b
 if int():
@@ -601,8 +575,12 @@ class B:
 
 
 [case testChainedCompResTyp]
-x, y = None, None # type: (X, Y)
-a, b, p, bo = None, None, None, None # type: (A, B, P, bool)
+x: X
+y: Y
+a: A
+b: B
+p: P
+bo: bool
 if int():
     b = y == y == y
 if int():
@@ -632,7 +610,8 @@ class Y:
 
 
 [case testIs]
-a, b = None, None # type: (A, bool)
+a: A
+b: bool
 if int():
     a = a is b # E: Incompatible types in assignment (expression has type "bool", variable has type "A")
 if int():
@@ -645,7 +624,8 @@ class A: pass
 [builtins fixtures/bool.pyi]
 
 [case testIsNot]
-a, b = None, None # type: (A, bool)
+a: A
+b: bool
 if int():
     a = a is not b # E: Incompatible types in assignment (expression has type "bool", variable has type "A")
 if int():
@@ -670,8 +650,8 @@ class A:
     def __add__(self, x: int) -> int: pass
 class B:
     def __radd__(self, x: A) -> str: pass
-s = None  # type: str
-n = None  # type: int
+s: str
+n: int
 if int():
     n = A() + 1
 if int():
@@ -684,8 +664,8 @@ class A:
     def __add__(self, x: 'A') -> object: pass
 class B:
     def __radd__(self, x: A) -> str: pass
-s = None  # type: str
-n = None  # type: int
+s: str
+n: int
 if int():
     s = A() + B()
     n = A() + B() # E: Incompatible types in assignment (expression has type "str", variable has type "int")
@@ -698,7 +678,7 @@ class A:
     def __add__(self, x: N) -> int: pass
 class B:
     def __radd__(self, x: N) -> str: pass
-s = None  # type: str
+s: str
 s = A() + B() # E: Unsupported operand types for + ("A" and "B")
 
 [case testBinaryOperatorWithAnyRightOperand]
@@ -713,8 +693,8 @@ class A:
     def __lt__(self, x: C) -> int: pass  # E: Signatures of "__lt__" of "A" and "__gt__" of "C" are unsafely overlapping
 class B:
     def __gt__(self, x: A) -> str: pass
-s = None  # type: str
-n = None  # type: int
+s: str
+n: int
 if int():
     n = A() < C()
     s = A() < B()
@@ -758,6 +738,7 @@ tmp/m.py:8: error: Invalid index type "int" for "A"; expected type "str"
 
 
 [case testDivmod]
+# flags: --disable-error-code=used-before-def
 from typing import Tuple, Union, SupportsInt
 _Decimal = Union[Decimal, int]
 class Decimal(SupportsInt):
@@ -808,8 +789,8 @@ divmod('foo', d)  # E: Unsupported operand types for divmod ("str" and "Decimal"
 
 
 [case testUnaryMinus]
-
-a, b = None, None # type: (A, B)
+a: A
+b: B
 if int():
     a = -a   # E: Incompatible types in assignment (expression has type "B", variable has type "A")
 if int():
@@ -825,7 +806,8 @@ class B:
 [builtins fixtures/tuple.pyi]
 
 [case testUnaryPlus]
-a, b = None, None # type: (A, B)
+a: A
+b: B
 if int():
     a = +a   # E: Incompatible types in assignment (expression has type "B", variable has type "A")
 if int():
@@ -841,7 +823,8 @@ class B:
 [builtins fixtures/tuple.pyi]
 
 [case testUnaryNot]
-a, b = None, None # type: (A, bool)
+a: A
+b: bool
 if int():
     a = not b  # E: Incompatible types in assignment (expression has type "bool", variable has type "A")
 if int():
@@ -853,7 +836,8 @@ class A:
 [builtins fixtures/bool.pyi]
 
 [case testUnaryBitwiseNeg]
-a, b = None, None # type: (A, B)
+a: A
+b: B
 if int():
     a = ~a   # E: Incompatible types in assignment (expression has type "B", variable has type "A")
 if int():
@@ -874,8 +858,9 @@ class B:
 
 
 [case testIndexing]
-
-a, b, c = None, None, None # type: (A, B, C)
+a: A
+b: B
+c: C
 if int():
     c = a[c]  # E: Invalid index type "C" for "A"; expected type "B"
 if int():
@@ -893,8 +878,9 @@ class C: pass
 [builtins fixtures/tuple.pyi]
 
 [case testIndexingAsLvalue]
-
-a, b, c = None, None, None # type: (A, B, C)
+a: A
+b: B
+c: C
 a[c] = c  # Fail
 a[b] = a  # Fail
 b[a] = c  # Fail
@@ -909,24 +895,26 @@ class C:
     pass
 [builtins fixtures/tuple.pyi]
 [out]
-main:3: error: Invalid index type "C" for "A"; expected type "B"
-main:4: error: Incompatible types in assignment (expression has type "A", target has type "C")
-main:5: error: Unsupported target for indexed assignment ("B")
+main:4: error: Invalid index type "C" for "A"; expected type "B"
+main:5: error: Incompatible types in assignment (expression has type "A", target has type "C")
+main:6: error: Unsupported target for indexed assignment ("B")
 
 [case testOverloadedIndexing]
 from foo import *
 [file foo.pyi]
 from typing import overload
-
-a, b, c = None, None, None  # type: (A, B, C)
+a: A
+b: B
+c: C
 a[b]
 a[c]
 a[1]  # E: No overload variant of "__getitem__" of "A" matches argument type "int" \
       # N: Possible overload variants: \
-      # N:     def __getitem__(self, B) -> int \
-      # N:     def __getitem__(self, C) -> str
+      # N:     def __getitem__(self, B, /) -> int \
+      # N:     def __getitem__(self, C, /) -> str
 
-i, s = None, None  # type: (int, str)
+i: int
+s: str
 if int():
     i = a[b]
 if int():
@@ -958,7 +946,9 @@ from typing import cast, Any
 class A: pass
 class B: pass
 class C(A): pass
-a, b, c = None, None, None # type: (A, B, C)
+a: A
+b: B
+c: C
 
 if int():
     a = cast(A, a())       # E: "A" not callable
@@ -981,7 +971,8 @@ if int():
 
 [case testAnyCast]
 from typing import cast, Any
-a, b = None, None # type: (A, B)
+a: A
+b: B
 a = cast(Any, a())     # Fail
 a = cast(Any, b)
 b = cast(Any, a)
@@ -989,15 +980,87 @@ class A: pass
 class B: pass
 [builtins fixtures/tuple.pyi]
 [out]
-main:3: error: "A" not callable
+main:4: error: "A" not callable
 
+-- assert_type()
+
+[case testAssertType]
+from typing import assert_type, Any
+from typing_extensions import Literal
+a: int = 1
+returned = assert_type(a, int)
+reveal_type(returned)  # N: Revealed type is "builtins.int"
+assert_type(a, str)  # E: Expression is of type "int", not "str"
+assert_type(a, Any)  # E: Expression is of type "int", not "Any"
+assert_type(a, Literal[1])  # E: Expression is of type "int", not "Literal[1]"
+assert_type(42, Literal[42])
+assert_type(42, int)  # E: Expression is of type "Literal[42]", not "int"
+[builtins fixtures/tuple.pyi]
+
+[case testAssertTypeGeneric]
+from typing import assert_type, TypeVar, Generic
+from typing_extensions import Literal
+T = TypeVar("T")
+def f(x: T) -> T: return x
+assert_type(f(1), int)
+class Gen(Generic[T]):
+    def __new__(cls, obj: T) -> Gen[T]: ...
+assert_type(Gen(1), Gen[int])
+# With type context, it infers Gen[Literal[1]] instead.
+y: Gen[Literal[1]] = assert_type(Gen(1), Gen[Literal[1]])
+
+[builtins fixtures/tuple.pyi]
+
+[case testAssertTypeUncheckedFunction]
+from typing import assert_type
+from typing_extensions import Literal
+def f():
+    x = 42
+    assert_type(x, Literal[42])
+[out]
+main:5: error: Expression is of type "Any", not "Literal[42]"
+main:5: note: "assert_type" expects everything to be "Any" in unchecked functions
+[builtins fixtures/tuple.pyi]
+
+[case testAssertTypeUncheckedFunctionWithUntypedCheck]
+# flags: --check-untyped-defs
+from typing import assert_type
+from typing_extensions import Literal
+def f():
+    x = 42
+    assert_type(x, Literal[42])
+[out]
+main:6: error: Expression is of type "int", not "Literal[42]"
+[builtins fixtures/tuple.pyi]
+
+[case testAssertTypeNoPromoteUnion]
+from typing import Union, assert_type
+
+Scalar = Union[int, bool, bytes, bytearray]
+
+
+def reduce_it(s: Scalar) -> Scalar:
+    return s
+
+assert_type(reduce_it(True), Scalar)
+[builtins fixtures/tuple.pyi]
 
 -- None return type
 -- ----------------
 
 
 [case testNoneReturnTypeBasics]
-a, o = None, None # type: (A, object)
+def f() -> None:
+    pass
+
+class A:
+    def g(self, x: object) -> None:
+        pass
+    def __call__(self) -> None:
+        pass
+
+a: A
+o: object
 if int():
     a = f()         # E: "f" does not return a value
 if int():
@@ -1010,41 +1073,31 @@ A().g(f())      # E: "f" does not return a value
 x: A = f()      # E: "f" does not return a value
 f()
 A().g(a)
-
-def f() -> None:
-    pass
-
-class A:
-    def g(self, x: object) -> None:
-        pass
-    def __call__(self) -> None:
-        pass
 [builtins fixtures/tuple.pyi]
 
 [case testNoneReturnTypeWithStatements]
 import typing
-if f():   # Fail
+def f() -> None: pass
+
+if f():   # E: "f" does not return a value
     pass
-elif f(): # Fail
+elif f(): # E: "f" does not return a value
     pass
-while f(): # Fail
+while f(): # E: "f" does not return a value
     pass
 def g() -> object:
-    return f() # Fail
-raise f() # Fail
-
-def f() -> None: pass
+    return f() # E: "f" does not return a value
+raise f() # E: "f" does not return a value
 [builtins fixtures/exception.pyi]
-[out]
-main:2: error: "f" does not return a value
-main:4: error: "f" does not return a value
-main:6: error: "f" does not return a value
-main:9: error: "f" does not return a value
-main:10: error: "f" does not return a value
 
 [case testNoneReturnTypeWithExpressions]
 from typing import cast
-a = None # type: A
+
+def f() -> None: pass
+class A:
+    def __add__(self, x: 'A') -> 'A': pass
+
+a: A
 [f()]       # E: "f" does not return a value
 f() + a     # E: "f" does not return a value
 a + f()     # E: "f" does not return a value
@@ -1052,16 +1105,18 @@ f() == a    # E: "f" does not return a value
 a != f()    # E: "f" does not return a value
 cast(A, f())
 f().foo     # E: "f" does not return a value
-
-def f() -> None: pass
-class A:
-    def __add__(self, x: 'A') -> 'A': pass
 [builtins fixtures/list.pyi]
 
 [case testNoneReturnTypeWithExpressions2]
 import typing
 
-a, b = None, None # type: (A, bool)
+def f() -> None: pass
+class A:
+    def __add__(self, x: 'A') -> 'A':
+        pass
+
+a: A
+b: bool
 f() in a   # E: "f" does not return a value  # E: Unsupported right operand type for in ("A")
 a < f()    # E: "f" does not return a value
 f() <= a   # E: "f" does not return a value
@@ -1070,19 +1125,16 @@ a in f()   # E: "f" does not return a value
 not f()    # E: "f" does not return a value
 f() and b  # E: "f" does not return a value
 b or f()   # E: "f" does not return a value
-
-def f() -> None: pass
-class A:
-    def __add__(self, x: 'A') -> 'A':
-        pass
 [builtins fixtures/bool.pyi]
+
 
 -- Slicing
 -- -------
 
 
 [case testGetSlice]
-a, b = None, None # type: (A, B)
+a: A
+b: B
 if int():
     a = a[1:2] # E: Incompatible types in assignment (expression has type "B", variable has type "A")
 if int():
@@ -1108,7 +1160,7 @@ class B: pass
 
 [case testSlicingWithInvalidBase]
 
-a = None # type: A
+a: A
 a[1:2] # E: Invalid index type "slice" for "A"; expected type "int"
 a[:]   # E: Invalid index type "slice" for "A"; expected type "int"
 class A:
@@ -1117,23 +1169,40 @@ class A:
 
 [case testSlicingWithNonindexable]
 
-o = None # type: object
+o: object
 o[1:2] # E: Value of type "object" is not indexable
 o[:]   # E: Value of type "object" is not indexable
 [builtins fixtures/slice.pyi]
 
 [case testNonIntSliceBounds]
 from typing import Any
-a, o = None, None # type: (Any, object)
-a[o:1] # E: Slice index must be an integer or None
-a[1:o] # E: Slice index must be an integer or None
-a[o:]  # E: Slice index must be an integer or None
-a[:o]  # E: Slice index must be an integer or None
+a: Any
+o: object
+a[o:1] # E: Slice index must be an integer, SupportsIndex or None
+a[1:o] # E: Slice index must be an integer, SupportsIndex or None
+a[o:]  # E: Slice index must be an integer, SupportsIndex or None
+a[:o]  # E: Slice index must be an integer, SupportsIndex or None
+[builtins fixtures/slice.pyi]
+
+[case testSliceSupportsIndex]
+import typing_extensions
+class Index:
+    def __init__(self, value: int) -> None:
+        self.value = value
+    def __index__(self) -> int:
+        return self.value
+
+c = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
+reveal_type(c[Index(0):Index(5)])  # N: Revealed type is "builtins.list[builtins.int]"
+[file typing_extensions.pyi]
+from typing import Protocol
+class SupportsIndex(Protocol):
+    def __index__(self) -> int: ...
 [builtins fixtures/slice.pyi]
 
 [case testNoneSliceBounds]
 from typing import Any
-a = None # type: Any
+a: Any
 a[None:1]
 a[1:None]
 a[None:]
@@ -1143,590 +1212,13 @@ a[:None]
 [case testNoneSliceBoundsWithStrictOptional]
 # flags: --strict-optional
 from typing import Any
-a = None # type: Any
+a: Any
 a[None:1]
 a[1:None]
 a[None:]
 a[:None]
 [builtins fixtures/slice.pyi]
 
-
--- String interpolation
--- --------------------
-
-
-[case testStringInterpolationType]
-from typing import Tuple
-i, f, s, t = None, None, None, None # type: (int, float, str, Tuple[int])
-'%d' % i
-'%f' % f
-'%s' % s
-'%d' % (f,)
-'%d' % (s,) # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "Union[int, float, SupportsInt]")
-'%d' % t
-'%d' % s  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "Union[int, float, SupportsInt]")
-'%f' % s  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "Union[int, float, SupportsFloat]")
-'%x' % f  # E: Incompatible types in string interpolation (expression has type "float", placeholder has type "int")
-'%i' % f
-'%o' % f  # E: Incompatible types in string interpolation (expression has type "float", placeholder has type "int")
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationSAcceptsAnyType]
-from typing import Any
-i, o, s = None, None, None # type: (int, object, str)
-'%s %s %s' % (i, o, s)
-[builtins fixtures/primitives.pyi]
-
-[case testStringInterpolationSBytesVsStrErrorPy3]
-xb: bytes
-xs: str
-
-'%s' % xs   # OK
-'%s' % xb   # E: On Python 3 '%s' % b'abc' produces "b'abc'", not 'abc'; use '%r' % b'abc' if this is desired behavior
-'%(name)s' % {'name': b'value'}  # E: On Python 3 '%s' % b'abc' produces "b'abc'", not 'abc'; use '%r' % b'abc' if this is desired behavior
-[builtins fixtures/primitives.pyi]
-
-[case testStringInterpolationSBytesVsStrResultsPy2]
-# flags: --python-version 2.7
-xs = 'x'
-xu = u'x'
-
-reveal_type('%s' % xu)  # N: Revealed type is "builtins.unicode"
-reveal_type('%s, %d' % (u'abc', 42))  # N: Revealed type is "builtins.unicode"
-reveal_type('%(key)s' % {'key': xu})  # N: Revealed type is "builtins.unicode"
-reveal_type('%r' % xu)  # N: Revealed type is "builtins.str"
-reveal_type('%s' % xs)  # N: Revealed type is "builtins.str"
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationCount]
-'%d %d' % 1  # E: Not enough arguments for format string
-'%d %d' % (1, 2)
-'%d %d' % (1, 2, 3)  # E: Not all arguments converted during string formatting
-t = 1, 's'
-'%d %s' % t
-'%s %d' % t  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "Union[int, float, SupportsInt]")
-'%d' % t  # E: Not all arguments converted during string formatting
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationWithAnyType]
-from typing import Any
-a = None # type: Any
-'%d %d' % a
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationInvalidPlaceholder]
-'%W' % 1  # E: Unsupported format character "W"
-'%b' % 1  # E: Format character "b" is only supported on bytes patterns
-
-[case testStringInterPolationPython2]
-# flags: --python-version 2.7
-b'%b' % 1  # E: Format character "b" is only supported in Python 3.5 and later
-b'%s' % 1
-b'%a' % 1  # E: Format character "a" is only supported in Python 3
-
-[case testBytesInterpolationBefore35]
-# flags: --python-version 3.4
-b'%b' % 1  # E: Unsupported left operand type for % ("bytes")
-
-[case testBytesInterpolation]
-b'%b' % 1  # E: Incompatible types in string interpolation (expression has type "int", placeholder has type "bytes")
-b'%b' % b'1'
-b'%a' % 3
-
-[case testStringInterpolationWidth]
-'%2f' % 3.14
-'%*f' % 3.14 # E: Not enough arguments for format string
-'%*f' % (4, 3.14)
-'%*f' % (1.1, 3.14) # E: * wants int
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationPrecision]
-'%.2f' % 3.14
-'%.*f' % 3.14 # E: Not enough arguments for format string
-'%.*f' % (4, 3.14)
-'%.*f' % (1.1, 3.14) # E: * wants int
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationWidthAndPrecision]
-'%4.2f' % 3.14
-'%4.*f' % 3.14 # E: Not enough arguments for format string
-'%*.2f' % 3.14 # E: Not enough arguments for format string
-'%*.*f' % 3.14 # E: Not enough arguments for format string
-'%*.*f' % (4, 2, 3.14)
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationFlagsAndLengthModifiers]
-'%04hd' % 1
-'%-.4ld' % 1
-'%+*Ld' % (1, 1)
-'% .*ld' % (1, 1)
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationDoublePercentage]
-'%% %d' % 1
-'%3% %d' % 1
-'%*%' % 1
-'%*% %d' % 1  # E: Not enough arguments for format string
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationC]
-'%c' % 1
-'%c' % 's'
-'%c' % ''  # E: "%c" requires int or char
-'%c' % 'ab'  # E: "%c" requires int or char
-[builtins fixtures/primitives.pyi]
-
-[case testStringInterpolationMappingTypes]
-'%(a)d %(b)s' % {'a': 1, 'b': 's'}
-'%(a)d %(b)s' % {'a': 's', 'b': 1}  # E: Incompatible types in string interpolation (expression has type "str", placeholder with key 'a' has type "Union[int, float, SupportsInt]")
-b'%(x)s' % {b'x': b'data'}
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationMappingKeys]
-'%()d' % {'': 2}
-'%(a)d' % {'a': 1, 'b': 2, 'c': 3}
-'%(q)d' % {'a': 1, 'b': 2, 'c': 3}  # E: Key "q" not found in mapping
-'%(a)d %%' % {'a': 1}
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationMappingDictTypes]
-from typing import Any, Dict
-a = None # type: Any
-ds, do, di = None, None, None # type: Dict[str, int], Dict[object, int], Dict[int, int]
-'%(a)' % 1  # E: Format requires a mapping (expression has type "int", expected type for mapping is "Mapping[str, Any]")
-'%()d' % a
-'%()d' % ds
-'%()d' % do  # E: Format requires a mapping (expression has type "Dict[object, int]", expected type for mapping is "Mapping[str, Any]")
-b'%()d' % ds  # E: Format requires a mapping (expression has type "Dict[str, int]", expected type for mapping is "Mapping[bytes, Any]")
-[builtins fixtures/primitives.pyi]
-
-[case testStringInterpolationMappingInvalidDictTypesPy2]
-# flags: --py2 --no-strict-optional
-from typing import Any, Dict
-di = None # type: Dict[int, int]
-'%()d' % di  # E: Format requires a mapping (expression has type "Dict[int, int]", expected type for mapping is "Union[Mapping[str, Any], Mapping[unicode, Any]]")
-[builtins_py2 fixtures/python2.pyi]
-
-[case testStringInterpolationMappingInvalidSpecifiers]
-'%(a)d %d' % 1  # E: String interpolation mixes specifier with and without mapping keys
-'%(b)*d' % 1  # E: String interpolation contains both stars and mapping keys
-'%(b).*d' % 1  # E: String interpolation contains both stars and mapping keys
-
-[case testStringInterpolationMappingFlagsAndLengthModifiers]
-'%(a)1d' % {'a': 1}
-'%(a).1d' % {'a': 1}
-'%(a)#1.1ld' % {'a': 1}
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationFloatPrecision]
-'%.f' % 1.2
-'%.3f' % 1.2
-'%.f' % 'x'
-'%.3f' % 'x'
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-[out]
-main:3: error: Incompatible types in string interpolation (expression has type "str", placeholder has type "Union[int, float, SupportsFloat]")
-main:4: error: Incompatible types in string interpolation (expression has type "str", placeholder has type "Union[int, float, SupportsFloat]")
-
-[case testStringInterpolationSpaceKey]
-'%( )s' % {' ': 'foo'}
-
-[case testByteByteInterpolation]
-def foo(a: bytes, b: bytes):
-    b'%s:%s' % (a, b)
-foo(b'a', b'b') == b'a:b'
-[builtins fixtures/tuple.pyi]
-
-[case testStringInterpolationStarArgs]
-x = (1, 2)
-"%d%d" % (*x,)
-[typing fixtures/typing-medium.pyi]
-[builtins fixtures/tuple.pyi]
-
-[case testBytePercentInterpolationSupported]
-b'%s' % (b'xyz',)
-b'%(name)s' % {'name': b'jane'}  # E: Dictionary keys in bytes formatting must be bytes, not strings
-b'%(name)s' % {b'name': 'jane'}  # E: On Python 3 b'%s' requires bytes, not string
-b'%c' % (123)
-[builtins fixtures/tuple.pyi]
-
-[case testUnicodeInterpolation_python2]
-u'%s' % (u'abc',)
-
-[case testStringInterpolationVariableLengthTuple]
-from typing import Tuple
-def f(t: Tuple[int, ...]) -> None:
-    '%d %d' % t
-    '%d %d %d' % t
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testStringInterpolationUnionType]
-from typing import Tuple, Union
-a: Union[Tuple[int, str], Tuple[str, int]] = ('A', 1)
-'%s %s' % a
-'%s' % a  # E: Not all arguments converted during string formatting
-
-b: Union[Tuple[int, str], Tuple[int, int], Tuple[str, int]] = ('A', 1)
-'%s %s' % b
-'%s %s %s' % b  # E: Not enough arguments for format string
-
-c: Union[Tuple[str, int], Tuple[str, int, str]] = ('A', 1)
-'%s %s' % c  # E: Not all arguments converted during string formatting
-[builtins fixtures/tuple.pyi]
-
--- str.format() calls
--- ------------------
-
-[case testFormatCallParseErrors]
-'}'.format()  # E: Invalid conversion specifier in format string: unexpected }
-'{'.format()  # E: Invalid conversion specifier in format string: unmatched {
-
-'}}'.format()  # OK
-'{{'.format()  # OK
-
-'{{}}}'.format()  # E: Invalid conversion specifier in format string: unexpected }
-'{{{}}'.format()  # E: Invalid conversion specifier in format string: unexpected }
-
-'{}}{{}'.format()  # E: Invalid conversion specifier in format string: unexpected }
-'{{{}:{}}}'.format(0)  # E: Cannot find replacement for positional format specifier 1
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallValidationErrors]
-'{!}}'.format(0)  # E: Invalid conversion specifier in format string: unexpected }
-'{!x}'.format(0)  # E: Invalid conversion type "x", must be one of "r", "s" or "a"
-'{!:}'.format(0)  # E: Invalid conversion specifier in format string
-
-'{{}:s}'.format(0)  # E: Invalid conversion specifier in format string: unexpected }
-'{{}.attr}'.format(0)  # E: Invalid conversion specifier in format string: unexpected }
-'{{}[key]}'.format(0)  # E: Invalid conversion specifier in format string: unexpected }
-
-'{ {}:s}'.format()  # E: Conversion value must not contain { or }
-'{ {}.attr}'.format()  # E: Conversion value must not contain { or }
-'{ {}[key]}'.format()  # E: Conversion value must not contain { or }
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallEscaping]
-'{}'.format()  # E: Cannot find replacement for positional format specifier 0
-'{}'.format(0)  # OK
-
-'{{}}'.format()  # OK
-'{{}}'.format(0)  # E: Not all arguments converted during string formatting
-
-'{{{}}}'.format()  # E: Cannot find replacement for positional format specifier 0
-'{{{}}}'.format(0)  # OK
-
-'{{}} {} {{}}'.format(0)  # OK
-'{{}} {:d} {{}} {:d}'.format('a', 'b')  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "int")
-
-'foo({}, {}) == {{}} ({{}} expected)'.format(0)  # E: Cannot find replacement for positional format specifier 1
-'foo({}, {}) == {{}} ({{}} expected)'.format(0, 1)  # OK
-'foo({}, {}) == {{}} ({{}} expected)'.format(0, 1, 2)  # E: Not all arguments converted during string formatting
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallNestedFormats]
-'{:{}{}}'.format(42, '*')  # E: Cannot find replacement for positional format specifier 2
-'{:{}{}}'.format(42, '*', '^')  # OK
-'{:{}{}}'.format(42, '*', '^', 0)  # E: Not all arguments converted during string formatting
-
-# NOTE: we don't check format specifiers that contain { or } at all
-'{:{{}}}'.format()  # E: Cannot find replacement for positional format specifier 0
-
-'{:{:{}}}'.format()  # E: Formatting nesting must be at most two levels deep
-'{:{{}:{}}}'.format()  # E: Invalid conversion specifier in format string: unexpected }
-
-'{!s:{fill:d}{align}}'.format(42, fill='*', align='^')  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "int")
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallAutoNumbering]
-'{}, {{}}, {0}'.format()  # E: Cannot combine automatic field numbering and manual field specification
-'{0}, {1}, {}'.format()  # E: Cannot combine automatic field numbering and manual field specification
-
-'{0}, {1}, {0}'.format(1, 2, 3)  # E: Not all arguments converted during string formatting
-'{}, {other:+d}, {}'.format(1, 2, other='no')  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "int")
-'{0}, {other}, {}'.format()  # E: Cannot combine automatic field numbering and manual field specification
-
-'{:{}}, {:{:.5d}{}}'.format(1, 2, 3, 'a', 5)  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "int")
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallMatchingPositional]
-'{}'.format(positional='no')  # E: Cannot find replacement for positional format specifier 0 \
-                              # E: Not all arguments converted during string formatting
-'{.x}, {}, {}'.format(1, 'two', 'three')  # E: "int" has no attribute "x"
-'Reverse {2.x}, {1}, {0}'.format(1, 2, 'three')  # E: "str" has no attribute "x"
-''.format(1, 2)  # E: Not all arguments converted during string formatting
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallMatchingNamed]
-'{named}'.format(0)  # E: Cannot find replacement for named format specifier "named" \
-                     # E: Not all arguments converted during string formatting
-'{one.x}, {two}'.format(one=1, two='two')  # E: "int" has no attribute "x"
-'{one}, {two}, {.x}'.format(1, one='two', two='three')  # E: "int" has no attribute "x"
-''.format(stuff='yes')  # E: Not all arguments converted during string formatting
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallMatchingVarArg]
-from typing import List
-args: List[int] = []
-'{}, {}'.format(1, 2, *args)  # Don't flag this because args may be empty
-
-strings: List[str]
-'{:d}, {[0].x}'.format(*strings)  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "int") \
-                                  # E: "str" has no attribute "x"
-# TODO: this is a runtime error, but error message is confusing
-'{[0][:]:d}'.format(*strings)  # E: Syntax error in format specifier "0[0]["
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallMatchingKwArg]
-from typing import Dict
-kwargs: Dict[str, str] = {}
-'{one}, {two}'.format(one=1, two=2, **kwargs)  # Don't flag this because args may be empty
-
-'{stuff:.3d}'.format(**kwargs)  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "int")
-'{stuff[0]:f}, {other}'.format(**kwargs)  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "Union[int, float]")
-'{stuff[0]:c}'.format(**kwargs)
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallCustomFormatSpec]
-from typing import Union
-class Bad:
-    ...
-class Good:
-    def __format__(self, spec: str) -> str: ...
-
-'{:OMG}'.format(Good())
-'{:OMG}'.format(Bad())  # E: Unrecognized format specification "OMG"
-'{!s:OMG}'.format(Good())  # E: Unrecognized format specification "OMG"
-'{:{}OMG{}}'.format(Bad(), 'too', 'dynamic')
-
-x: Union[Good, Bad]
-'{:OMG}'.format(x)  # E: Unrecognized format specification "OMG"
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallFormatTypes]
-'{:x}'.format(42)
-'{:E}'.format(42)
-'{:g}'.format(42)
-'{:x}'.format('no')  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "int")
-'{:E}'.format('no')  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "Union[int, float]")
-'{:g}'.format('no')  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "Union[int, float]")
-'{:n}'.format(3.14)
-'{:d}'.format(3.14)  # E: Incompatible types in string interpolation (expression has type "float", placeholder has type "int")
-
-'{:s}'.format(42)
-'{:s}'.format('yes')
-
-'{:z}'.format('what')  # E: Unsupported format character "z"
-'{:Z}'.format('what')  # E: Unsupported format character "Z"
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallFormatTypesChar]
-'{:c}'.format(42)
-'{:c}'.format('no')  # E: ":c" requires int or char
-'{:c}'.format('c')
-
-class C:
-    ...
-'{:c}'.format(C())  # E: Incompatible types in string interpolation (expression has type "C", placeholder has type "Union[int, float, str]")
-x: str
-'{:c}'.format(x)
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallFormatTypesCustomFormat]
-from typing import Union
-class Bad:
-    ...
-class Good:
-    def __format__(self, spec: str) -> str: ...
-
-x: Union[Good, Bad]
-y: Union[Good, int]
-z: Union[Bad, int]
-t: Union[Good, str]
-'{:d}'.format(x)  # E: Incompatible types in string interpolation (expression has type "Bad", placeholder has type "int")
-'{:d}'.format(y)
-'{:d}'.format(z)  # E: Incompatible types in string interpolation (expression has type "Bad", placeholder has type "int")
-'{:d}'.format(t)  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "int")
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallFormatTypesBytes]
-from typing import Union, TypeVar, NewType, Generic
-
-A = TypeVar('A', str, bytes)
-B = TypeVar('B', bound=bytes)
-
-x: Union[str, bytes]
-a: str
-b: bytes
-
-N = NewType('N', bytes)
-n: N
-
-'{}'.format(a)
-'{}'.format(b)  # E: On Python 3 '{}'.format(b'abc') produces "b'abc'", not 'abc'; use '{!r}'.format(b'abc') if this is desired behavior
-'{}'.format(x)  # E: On Python 3 '{}'.format(b'abc') produces "b'abc'", not 'abc'; use '{!r}'.format(b'abc') if this is desired behavior
-'{}'.format(n)  # E: On Python 3 '{}'.format(b'abc') produces "b'abc'", not 'abc'; use '{!r}'.format(b'abc') if this is desired behavior
-
-class C(Generic[B]):
-    x: B
-    def meth(self) -> None:
-        '{}'.format(self.x)  # E: On Python 3 '{}'.format(b'abc') produces "b'abc'", not 'abc'; use '{!r}'.format(b'abc') if this is desired behavior
-
-def func(x: A) -> A:
-    '{}'.format(x)  # E: On Python 3 '{}'.format(b'abc') produces "b'abc'", not 'abc'; use '{!r}'.format(b'abc') if this is desired behavior
-    return x
-
-'{!r}'.format(b)
-'{!r}'.format(x)
-'{!r}'.format(n)
-
-class D(bytes):
-    def __str__(self) -> str:
-        return "overrides __str__ of bytes"
-
-'{}'.format(D())
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallFormatTypesBytesNotPy2]
-# flags: --py2
-from typing import Union, TypeVar, NewType, Generic
-
-A = TypeVar('A', str, unicode)
-B = TypeVar('B', bound=str)
-
-x = ''  # type: Union[str, unicode]
-a = ''
-b = b''
-
-N = NewType('N', str)
-n = N(b'')
-
-'{}'.format(a)
-'{}'.format(b)
-'{}'.format(x)
-'{}'.format(n)
-
-u'{}'.format(a)
-u'{}'.format(b)
-u'{}'.format(x)
-u'{}'.format(n)
-
-class C(Generic[B]):
-    x = None  # type: B
-    def meth(self):
-        # type: () -> None
-        '{}'.format(self.x)
-
-def func(x):
-    # type: (A) -> A
-    '{}'.format(x)
-    return x
-
-'{!r}'.format(b)
-'{!r}'.format(x)
-'{!r}'.format(n)
-[builtins_py2 fixtures/python2.pyi]
-
-[case testFormatCallFinal]
-from typing_extensions import Final
-
-FMT: Final = '{.x}, {:{:d}}'
-
-FMT.format(1, 2, 'no')  # E: "int" has no attribute "x" \
-                        # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "int")
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallFinalChar]
-from typing_extensions import Final
-
-GOOD: Final = 'c'
-BAD: Final = 'no'
-OK: Final[str] = '...'
-
-'{:c}'.format(GOOD)
-'{:c}'.format(BAD)  # E: ":c" requires int or char
-'{:c}'.format(OK)
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallForcedConversions]
-'{!r}'.format(42)
-'{!s}'.format(42)
-'{!s:d}'.format(42)  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "int")
-'{!s:s}'.format('OK')
-'{} and {!x}'.format(0, 1)  # E: Invalid conversion type "x", must be one of "r", "s" or "a"
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallAccessorsBasic]
-from typing import Any
-x: Any
-
-'{.x:{[0]}}'.format('yes', 42)  # E: "str" has no attribute "x" \
-                                # E: Value of type "int" is not indexable
-
-'{.1+}'.format(x)  # E: Syntax error in format specifier "0.1+"
-'{name.x[x]()[x]:.2f}'.format(name=x)  # E: Only index and member expressions are allowed in format field accessors; got "name.x[x]()[x]"
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallAccessorsIndices]
-from typing_extensions import TypedDict
-
-class User(TypedDict):
-    id: int
-    name: str
-
-u: User
-'{user[name]:.3f}'.format(user=u)  # E: Incompatible types in string interpolation (expression has type "str", placeholder has type "Union[int, float]")
-
-def f() -> str: ...
-'{[f()]}'.format(u)  # E: Invalid index expression in format field accessor "[f()]"
-[builtins fixtures/primitives.pyi]
-
-[case testFormatCallFlags]
-from typing import Union
-
-class Good:
-    def __format__(self, spec: str) -> str: ...
-
-'{:#}'.format(42)
-
-'{:#}'.format('no')  # E: Numeric flags are only allowed for numeric types
-'{!s:#}'.format(42)  # E: Numeric flags are only allowed for numeric types
-
-'{:#s}'.format(42)  # E: Numeric flags are only allowed for numeric types
-'{:+s}'.format(42)  # E: Numeric flags are only allowed for numeric types
-
-'{:+d}'.format(42)
-'{:#d}'.format(42)
-
-x: Union[float, Good]
-'{:+f}'.format(x)
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
-
-[case testFormatCallSpecialCases]
-'{:08b}'.format(int('3'))
-
-class S:
-    def __int__(self) -> int: ...
-
-'{:+d}'.format(S())  # E: Incompatible types in string interpolation (expression has type "S", placeholder has type "int")
-'%d' % S()  # This is OK however
-'{:%}'.format(0.001)
-[builtins fixtures/primitives.pyi]
-[typing fixtures/typing-medium.pyi]
 
 -- Lambdas
 -- -------
@@ -1749,6 +1241,7 @@ def void() -> None:
 x = lambda: void() # type: typing.Callable[[], None]
 
 [case testNoCrashOnLambdaGenerator]
+# flags: --no-strict-optional
 from typing import Iterator, Callable
 
 # These should not crash
@@ -1778,7 +1271,7 @@ def f() -> None:
 
 [case testSimpleListComprehension]
 from typing import List
-a = None # type: List[A]
+a: List[A]
 a = [x for x in a]
 b = [x for x in a] # type: List[B] # E: List comprehension has incompatible type List[A]; expected List[B]
 class A: pass
@@ -1787,7 +1280,7 @@ class B: pass
 
 [case testSimpleListComprehensionNestedTuples]
 from typing import List, Tuple
-l = None # type: List[Tuple[A, Tuple[A, B]]]
+l: List[Tuple[A, Tuple[A, B]]]
 a = [a2 for a1, (a2, b1) in l] # type: List[A]
 b = [a2 for a1, (a2, b1) in l] # type: List[B] # E: List comprehension has incompatible type List[A]; expected List[B]
 class A: pass
@@ -1796,7 +1289,7 @@ class B: pass
 
 [case testSimpleListComprehensionNestedTuples2]
 from typing import List, Tuple
-l = None # type: List[Tuple[int, Tuple[int, str]]]
+l: List[Tuple[int, Tuple[int, str]]]
 a = [f(d) for d, (i, s) in l]
 b = [f(s) for d, (i, s) in l] # E: Argument 1 to "f" has incompatible type "str"; expected "int"
 
@@ -1819,14 +1312,14 @@ def f(a: A) -> B: pass
 
 [case testErrorInListComprehensionCondition]
 from typing import List
-a = None # type: List[A]
+a: List[A]
 a = [x for x in a if x()] # E: "A" not callable
 class A: pass
 [builtins fixtures/for.pyi]
 
 [case testTypeInferenceOfListComprehension]
 from typing import List
-a = None # type: List[A]
+a: List[A]
 o = [x for x in a] # type: List[object]
 class A: pass
 [builtins fixtures/for.pyi]
@@ -1834,7 +1327,7 @@ class A: pass
 [case testSimpleListComprehensionInClassBody]
 from typing import List
 class A:
-    a = None # type: List[A]
+    a: List[A]
     a = [x for x in a]
     b = [x for x in a] # type: List[B] # E: List comprehension has incompatible type List[A]; expected List[B]
 class B: pass
@@ -1848,7 +1341,7 @@ class B: pass
 
 [case testSimpleSetComprehension]
 from typing import Set
-a = None # type: Set[A]
+a: Set[A]
 a = {x for x in a}
 b = {x for x in a} # type: Set[B] # E: Set comprehension has incompatible type Set[A]; expected Set[B]
 class A: pass
@@ -1862,8 +1355,8 @@ class B: pass
 
 [case testSimpleDictionaryComprehension]
 from typing import Dict, List, Tuple
-abd = None # type: Dict[A, B]
-abl = None # type: List[Tuple[A, B]]
+abd: Dict[A, B]
+abl: List[Tuple[A, B]]
 abd = {a: b for a, b in abl}
 x = {a: b for a, b in abl} # type: Dict[B, A]
 y = {a: b for a, b in abl} # type: A
@@ -1879,7 +1372,7 @@ main:6: error: Incompatible types in assignment (expression has type "Dict[A, B]
 [case testDictionaryComprehensionWithNonDirectMapping]
 from typing import Dict, List, Tuple
 abd: Dict[A, B]
-abl = None # type: List[Tuple[A, B]]
+abl: List[Tuple[A, B]]
 abd = {a: f(b) for a, b in abl}
 class A: pass
 class B: pass
@@ -1899,10 +1392,10 @@ main:4: error: Argument 1 to "f" has incompatible type "B"; expected "A"
 from typing import Iterator
 # The implementation is mostly identical to list comprehensions, so only a few
 # test cases is ok.
-a = None # type: Iterator[int]
+a: Iterator[int]
 if int():
     a = (x for x in a)
-b = None # type: Iterator[str]
+b: Iterator[str]
 if int():
     b = (x for x in a) # E: Generator has incompatible item type "int"; expected "str"
 [builtins fixtures/for.pyi]
@@ -1911,7 +1404,7 @@ if int():
 from typing import Callable, Iterator, List
 
 a = []  # type: List[Callable[[], str]]
-b = None  # type: Iterator[Callable[[], int]]
+b: Iterator[Callable[[], int]]
 if int():
     b = (x for x in a)  # E: Generator has incompatible item type "Callable[[], str]"; expected "Callable[[], int]"
 [builtins fixtures/list.pyi]
@@ -2006,22 +1499,16 @@ z = x.append(y) if bool() else x.append(y) # E: "append" of "list" does not retu
 from typing import cast
 class A:
     def __add__(self, a: 'A') -> 'A': pass
-a = None # type: A
-None + a   # Fail
-f + a      # Fail
-a + f      # Fail
-cast(A, f)
-
 def f() -> None:
     pass
-[out]
-main:5: error: Unsupported left operand type for + ("None")
-main:6: error: Unsupported left operand type for + ("Callable[[], None]")
-main:7: error: Unsupported operand types for + ("A" and "Callable[[], None]")
-
+a: A
+None + a   # E: Unsupported left operand type for + ("None")
+f + a      # E: Unsupported left operand type for + ("Callable[[], None]")
+a + f      # E: Unsupported operand types for + ("A" and "Callable[[], None]")
+cast(A, f)
 [case testOperatorMethodWithInvalidArgCount]
 
-a = None # type: A
+a: A
 a + a  # Fail
 
 class A:
@@ -2035,7 +1522,7 @@ from typing import Any
 class A:
     def __init__(self, _add: Any) -> None:
         self.__add__ = _add
-a = None # type: A
+a: A
 a + a
 [out]
 
@@ -2044,15 +1531,16 @@ a + a
 class A:
     def f(self, x: int) -> str: pass
     __add__ = f
-s = None  # type: str
+s: str
 s = A() + 1
 A() + (A() + 1)
 [out]
 main:7: error: Argument 1 has incompatible type "str"; expected "int"
 
 [case testIndexedLvalueWithSubtypes]
-
-a, b, c = None, None, None # type: (A, B, C)
+a: A
+b: B
+c: C
 a[c] = c
 a[b] = c
 a[c] = b
@@ -2074,7 +1562,7 @@ class C(B):
 
 [case testEllipsis]
 
-a = None # type: A
+a: A
 if str():
     a = ...  # E: Incompatible types in assignment (expression has type "ellipsis", variable has type "A")
 b = ...
@@ -2085,15 +1573,7 @@ if str():
 ....a  # E: "ellipsis" has no attribute "a"
 
 class A: pass
-[file builtins.py]
-class object:
-    def __init__(self): pass
-class ellipsis:
-    def __init__(self): pass
-    __class__ = object()
-class type: pass
-class function: pass
-class str: pass
+[builtins fixtures/dict.pyi]
 [out]
 
 
@@ -2291,6 +1771,22 @@ main:1: note: Revealed type is "Any"
 def reveal_type(x: int) -> None: pass
 reveal_type("foo") # E: Argument 1 to "reveal_type" has incompatible type "str"; expected "int"
 
+[case testTypingRevealType]
+from typing import reveal_type
+from typing import reveal_type as show_me_the_type
+
+reveal_type(1) # N: Revealed type is "Literal[1]?"
+show_me_the_type(1) # N: Revealed type is "Literal[1]?"
+
+[case testTypingExtensionsRevealType]
+from typing_extensions import reveal_type
+from typing_extensions import reveal_type as show_me_the_type
+
+reveal_type(1) # N: Revealed type is "Literal[1]?"
+show_me_the_type(1) # N: Revealed type is "Literal[1]?"
+
+[builtins fixtures/tuple.pyi]
+
 [case testRevealTypeVar]
 reveal_type = 1
 1 + "foo" # E: Unsupported operand types for + ("int" and "str")
@@ -2298,7 +1794,7 @@ reveal_type = 1
 [case testRevealForward]
 def f() -> None:
     reveal_type(x)
-x = 1 + 1
+x = 1 + int()
 [out]
 main:2: note: Revealed type is "builtins.int"
 
@@ -2325,6 +1821,19 @@ def f() -> None:
 [out]
 main:3: note: Revealed type is "builtins.int"
 
+[case testLambdaTypedContext]
+def f() -> None:
+    lambda: 'a'.missing()  # E: "str" has no attribute "missing"
+
+[case testLambdaUnypedContext]
+def f():
+    lambda: 'a'.missing()
+
+[case testLambdaCheckUnypedContext]
+# flags: --check-untyped-defs
+def f():
+    lambda: 'a'.missing()  # E: "str" has no attribute "missing"
+
 [case testEqNone]
 None == None
 [builtins fixtures/ops.pyi]
@@ -2340,13 +1849,35 @@ b = {'z': 26, *a}  # E: invalid syntax
 
 [case testDictWithStarStarExpr]
 
-from typing import Dict
+from typing import Dict, Iterable
+
+class Thing:
+    def keys(self) -> Iterable[str]:
+        ...
+    def __getitem__(self, key: str) -> int:
+        ...
+
 a = {'a': 1}
 b = {'z': 26, **a}
 c = {**b}
 d = {**a, **b, 'c': 3}
-e = {1: 'a', **a}  # E: Argument 1 to "update" of "dict" has incompatible type "Dict[str, int]"; expected "Mapping[int, str]"
-f = {**b}  # type: Dict[int, int]  # E: List item 0 has incompatible type "Dict[str, int]"; expected "Mapping[int, int]"
+e = {1: 'a', **a}  # E: Cannot infer type argument 1 of <dict> \
+                   # N: Try assigning the literal to a variable annotated as dict[<key>, <val>]
+f = {**b}  # type: Dict[int, int]  # E: Unpacked dict entry 0 has incompatible type "Dict[str, int]"; expected "SupportsKeysAndGetItem[int, int]"
+g = {**Thing()}
+h = {**a, **Thing()}
+i = {**Thing()}  # type: Dict[int, int]  # E: Unpacked dict entry 0 has incompatible type "Thing"; expected "SupportsKeysAndGetItem[int, int]" \
+                 # N: Following member(s) of "Thing" have conflicts: \
+                 # N:     Expected: \
+                 # N:         def __getitem__(self, int, /) -> int \
+                 # N:     Got: \
+                 # N:         def __getitem__(self, str, /) -> int \
+                 # N:     Expected: \
+                 # N:         def keys(self) -> Iterable[int] \
+                 # N:     Got: \
+                 # N:         def keys(self) -> Iterable[str]
+j = {1: 'a', **Thing()}  # E: Cannot infer type argument 1 of <dict> \
+                         # N: Try assigning the literal to a variable annotated as dict[<key>, <val>]
 [builtins fixtures/dict.pyi]
 [typing fixtures/typing-medium.pyi]
 
@@ -2484,12 +2015,6 @@ bytearray(b'abc') in b'abcde'  # OK on Python 3
 [builtins fixtures/primitives.pyi]
 [typing fixtures/typing-medium.pyi]
 
-[case testBytesVsByteArray_python2]
-# flags: --strict-equality --py2
-b'hi' in bytearray(b'hi')
-[builtins_py2 fixtures/python2.pyi]
-[typing fixtures/typing-medium.pyi]
-
 [case testStrictEqualityNoPromotePy3]
 # flags: --strict-equality
 'a' == b'a'  # E: Non-overlapping equality check (left operand type: "Literal['a']", right operand type: "Literal[b'a']")
@@ -2560,6 +2085,24 @@ class B:
 
 # Don't report non-overlapping check if there is already and error.
 A() == B()  # E: Unsupported operand types for == ("A" and "B")
+[builtins fixtures/bool.pyi]
+
+[case testStrictEqualitySequenceAndCustomEq]
+# flags: --strict-equality
+from typing import Tuple
+
+class C: pass
+class D:
+    def __eq__(self, other): return True
+
+a = [C()]
+b = [D()]
+a == b
+b == a
+t1: Tuple[C, ...]
+t2: Tuple[D, ...]
+t1 == t2
+t2 == t1
 [builtins fixtures/bool.pyi]
 
 [case testCustomEqCheckStrictEqualityOKInstance]
@@ -2727,9 +2270,9 @@ def returns_1_or_2() -> Literal[1, 2]:
     ...
 THREE: Final = 3
 
-if returns_a_or_b() == 'c':  # E: Non-overlapping equality check (left operand type: "Union[Literal['a'], Literal['b']]", right operand type: "Literal['c']")
+if returns_a_or_b() == 'c':  # E: Non-overlapping equality check (left operand type: "Literal['a', 'b']", right operand type: "Literal['c']")
     ...
-if returns_1_or_2() is THREE:  # E: Non-overlapping identity check (left operand type: "Union[Literal[1], Literal[2]]", right operand type: "Literal[3]")
+if returns_1_or_2() is THREE:  # E: Non-overlapping identity check (left operand type: "Literal[1, 2]", right operand type: "Literal[3]")
     ...
 [builtins fixtures/bool.pyi]
 
@@ -2749,18 +2292,6 @@ if f == 0:  # E: Non-overlapping equality check (left operand type: "FileId", ri
     ...
 [builtins fixtures/bool.pyi]
 
-[case testStrictEqualityPromotionsLiterals]
-# flags: --strict-equality --py2
-from typing import Final
-
-U_FOO = u'foo'  # type: Final
-
-if str() == U_FOO:
-    pass
-assert u'foo' == 'foo'
-assert u'foo' == u'bar'  # E: Non-overlapping equality check (left operand type: "Literal[u'foo']", right operand type: "Literal[u'bar']")
-[builtins_py2 fixtures/python2.pyi]
-
 [case testStrictEqualityWithFixedLengthTupleInCheck]
 # flags: --strict-equality
 if 1 in ('x', 'y'):  # E: Non-overlapping container check (element type: "int", container item type: "str")
@@ -2777,6 +2308,45 @@ x: Optional[Any]
 if x in (1, 2):
     pass
 [builtins fixtures/tuple.pyi]
+[typing fixtures/typing-full.pyi]
+
+
+[case testOverlappingClassCallables]
+# flags: --strict-equality
+from typing import Any, Callable, Type
+
+x: Type[int]
+y: Callable[[], Any]
+x == y
+y == x
+int == y
+y == int
+[builtins fixtures/bool.pyi]
+
+[case testStrictEqualityAndEnumWithCustomEq]
+# flags: --strict-equality
+from enum import Enum
+
+class E1(Enum):
+    X = 0
+    Y = 1
+
+class E2(Enum):
+    X = 0
+    Y = 1
+
+    def __eq__(self, other: object) -> bool:
+        return bool()
+
+E1.X == E1.Y  # E: Non-overlapping equality check (left operand type: "Literal[E1.X]", right operand type: "Literal[E1.Y]")
+E2.X == E2.Y
+[builtins fixtures/bool.pyi]
+
+[case testStrictEqualityWithBytesContains]
+# flags: --strict-equality
+data = b"xy"
+b"x" in data
+[builtins fixtures/primitives.pyi]
 [typing fixtures/typing-full.pyi]
 
 [case testUnimportedHintAny]

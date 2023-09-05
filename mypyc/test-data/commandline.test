@@ -24,6 +24,7 @@ for x in [a, b, p, p.q]:
 import b
 import c
 from p import s
+from typing import NamedTuple
 
 print('<a>', ord('A') == 65)  # Test full builtins
 
@@ -41,6 +42,11 @@ class B:
 print('<a>', f(5).x)
 print('<c>', c.foo())
 assert s.bar(10) == 20
+
+class NT(NamedTuple):
+    x: int
+
+print(NT(2))
 
 [file b.py]
 import a
@@ -79,6 +85,7 @@ def bar(x: int) -> int:
 <a> True
 <a> 5
 <c> 10
+NT(x=2)
 <main> 16
 
 -- This test is here so we can turn it on when we get nervous about
@@ -98,9 +105,10 @@ def f(x: int) -> int:
 # cmd: test.py
 
 [file test.py]
-from typing import List, Any
+from typing import List, Any, AsyncIterable
 from typing_extensions import Final
 from mypy_extensions import trait, mypyc_attr
+from functools import singledispatch
 
 def busted(b: bool) -> None:
     for i in range(1, 10, 0):  # E: range() step can't be zero
@@ -142,7 +150,7 @@ class PureTrait:
     pass
 
 @trait
-class Trait1(Concrete1):
+class Trait1:
     pass
 
 class Concrete2:
@@ -156,14 +164,28 @@ class Trait2(Concrete2):
 class NonExt(Concrete1):  # E: Non-extension classes may not inherit from extension classes
     pass
 
-class Nope(Trait1, Concrete2):  # E: Non-trait bases must appear first in parent list  # E: Non-trait MRO must be linear
+
+class NopeMultipleInheritance(Concrete1, Concrete2):  # E: Multiple inheritance is not supported (except for traits)
     pass
+
+class NopeMultipleInheritanceAndBadOrder(Concrete1, Trait1, Concrete2):  # E: Multiple inheritance is not supported (except for traits)
+    pass
+
+class NopeMultipleInheritanceAndBadOrder2(Concrete1, Concrete2, Trait1):  # E: Multiple inheritance is not supported (except for traits)
+    pass
+
+class NopeMultipleInheritanceAndBadOrder3(Trait1, Concrete1, Concrete2):  # E: Non-trait base must appear first in parent list # E: Multiple inheritance is not supported (except for traits)
+    pass
+
+class NopeBadOrder(Trait1, Concrete2):  # E: Non-trait base must appear first in parent list
+    pass
+
 
 @decorator
 class NonExt2:
     @property  # E: Property setters not supported in non-extension classes
     def test(self) -> int:
-        pass
+        return 0
 
     @test.setter
     def test(self, x: int) -> None:
@@ -192,3 +214,32 @@ class AllowInterp1(Concrete1):  # E: Base class "test.Concrete1" does not allow 
 @mypyc_attr(allow_interpreted_subclasses=True)
 class AllowInterp2(PureTrait):  # E: Base class "test.PureTrait" does not allow interpreted subclasses
     pass
+
+async def async_generators() -> AsyncIterable[int]:
+    yield 1  # E: async generators are unimplemented
+
+@singledispatch
+def a(arg) -> None:
+    pass
+
+@decorator # E: Calling decorator after registering function not supported
+@a.register
+def g(arg: int) -> None:
+    pass
+
+@a.register
+@decorator
+def h(arg: str) -> None:
+    pass
+
+@decorator
+@decorator # E: Calling decorator after registering function not supported
+@a.register
+def i(arg: Foo) -> None:
+    pass
+
+[case testOnlyWarningOutput]
+# cmd: test.py
+
+[file test.py]
+names = (str(v) for v in [1, 2, 3])  # W: Treating generator comprehension as list

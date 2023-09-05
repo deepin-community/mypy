@@ -3,13 +3,14 @@
 // These are registered in mypyc.primitives.misc_ops.
 
 #include <Python.h>
+#include <patchlevel.h>
 #include "CPy.h"
 
 PyObject *CPy_GetCoro(PyObject *obj)
 {
     // If the type has an __await__ method, call it,
     // otherwise, fallback to calling __iter__.
-    PyAsyncMethods* async_struct = obj->ob_type->tp_as_async;
+    PyAsyncMethods* async_struct = Py_TYPE(obj)->tp_as_async;
     if (async_struct != NULL && async_struct->am_await != NULL) {
         return (async_struct->am_await)(obj);
     } else {
@@ -24,10 +25,10 @@ PyObject *CPyIter_Send(PyObject *iter, PyObject *val)
     // Do a send, or a next if second arg is None.
     // (This behavior is to match the PEP 380 spec for yield from.)
     _Py_IDENTIFIER(send);
-    if (val == Py_None) {
+    if (Py_IsNone(val)) {
         return CPyIter_Next(iter);
     } else {
-        return _PyObject_CallMethodIdObjArgs(iter, &PyId_send, val, NULL);
+        return _PyObject_CallMethodIdOneArg(iter, &PyId_send, val);
     }
 }
 
@@ -45,7 +46,7 @@ int CPy_YieldFromErrorHandle(PyObject *iter, PyObject **outp)
 {
     _Py_IDENTIFIER(close);
     _Py_IDENTIFIER(throw);
-    PyObject *exc_type = CPy_ExcState()->exc_type;
+    PyObject *exc_type = (PyObject *)Py_TYPE(CPy_ExcState()->exc_value);
     PyObject *type, *value, *traceback;
     PyObject *_m;
     PyObject *res;
@@ -54,7 +55,7 @@ int CPy_YieldFromErrorHandle(PyObject *iter, PyObject **outp)
     if (PyErr_GivenExceptionMatches(exc_type, PyExc_GeneratorExit)) {
         _m = _PyObject_GetAttrId(iter, &PyId_close);
         if (_m) {
-            res = PyObject_CallFunctionObjArgs(_m, NULL);
+            res = PyObject_CallNoArgs(_m);
             Py_DECREF(_m);
             if (!res)
                 return 2;
@@ -148,7 +149,7 @@ PyObject *CPyType_FromTemplate(PyObject *template,
     // to being type.  (This allows us to avoid needing to initialize
     // it explicitly on windows.)
     if (!Py_TYPE(template_)) {
-        Py_TYPE(template_) = &PyType_Type;
+        Py_SET_TYPE(template_, &PyType_Type);
     }
     PyTypeObject *metaclass = Py_TYPE(template_);
 
@@ -175,42 +176,6 @@ PyObject *CPyType_FromTemplate(PyObject *template,
     name = PyUnicode_FromString(template_->tp_name);
     if (!name)
         goto error;
-
-    // If there is a metaclass other than type, we would like to call
-    // its __new__ function. Unfortunately there doesn't seem to be a
-    // good way to mix a C extension class and creating it via a
-    // metaclass. We need to do it anyways, though, in order to
-    // support subclassing Generic[T] prior to Python 3.7.
-    //
-    // We solve this with a kind of atrocious hack: create a parallel
-    // class using the metaclass, determine the bases of the real
-    // class by pulling them out of the parallel class, creating the
-    // real class, and then merging its dict back into the original
-    // class. There are lots of cases where this won't really work,
-    // but for the case of GenericMeta setting a bunch of properties
-    // on the class we should be fine.
-    if (metaclass != &PyType_Type) {
-        assert(bases && "non-type metaclasses require non-NULL bases");
-
-        PyObject *ns = PyDict_New();
-        if (!ns)
-            goto error;
-
-        if (bases != orig_bases) {
-            if (PyDict_SetItemString(ns, "__orig_bases__", orig_bases) < 0)
-                goto error;
-        }
-
-        dummy_class = (PyTypeObject *)PyObject_CallFunctionObjArgs(
-            (PyObject *)metaclass, name, bases, ns, NULL);
-        Py_DECREF(ns);
-        if (!dummy_class)
-            goto error;
-
-        Py_DECREF(bases);
-        bases = dummy_class->tp_bases;
-        Py_INCREF(bases);
-    }
 
     // Allocate the type and then copy the main stuff in.
     t = (PyHeapTypeObject*)PyType_GenericAlloc(&PyType_Type, 0);
@@ -249,7 +214,7 @@ PyObject *CPyType_FromTemplate(PyObject *template,
     // the mro. It was needed for mypy.stats. I need to investigate
     // what is actually going on here.
     Py_INCREF(metaclass);
-    Py_TYPE(t) = metaclass;
+    Py_SET_TYPE(t, metaclass);
 
     if (dummy_class) {
         if (PyDict_Merge(t->ht_type.tp_dict, dummy_class->tp_dict, 0) != 0)
@@ -285,6 +250,11 @@ PyObject *CPyType_FromTemplate(PyObject *template,
 
     Py_XDECREF(dummy_class);
 
+#if PY_MINOR_VERSION == 11
+    // This is a hack. Python 3.11 doesn't include good public APIs to work with managed
+    // dicts, which are the default for heap types. So we try to opt-out until Python 3.12.
+    t->ht_type.tp_flags &= ~Py_TPFLAGS_MANAGED_DICT;
+#endif
     return (PyObject *)t;
 
 error:
@@ -360,7 +330,7 @@ CPyDataclass_SleightOfHand(PyObject *dataclass_dec, PyObject *tp,
     }
 
     /* Run the @dataclass descriptor */
-    res = PyObject_CallFunctionObjArgs(dataclass_dec, tp, NULL);
+    res = PyObject_CallOneArg(dataclass_dec, tp);
     if (!res) {
         goto fail;
     }
@@ -437,7 +407,7 @@ fail:
 }
 
 CPyTagged CPyTagged_Id(PyObject *o) {
-    return CPyTagged_FromSsize_t((Py_ssize_t)o);
+    return CPyTagged_FromVoidPtr(o);
 }
 
 #define MAX_INT_CHARS 22
@@ -512,7 +482,7 @@ int CPySequence_CheckUnpackCount(PyObject *sequence, Py_ssize_t expected) {
 
 // Parse an integer (size_t) encoded as a variable-length binary sequence.
 static const char *parse_int(const char *s, size_t *len) {
-    ssize_t n = 0;
+    Py_ssize_t n = 0;
     while ((unsigned char)*s >= 0x80) {
         n = (n << 7) + (*s & 0x7f);
         s++;
@@ -529,7 +499,8 @@ int CPyStatics_Initialize(PyObject **statics,
                           const char * const *ints,
                           const double *floats,
                           const double *complex_numbers,
-                          const int *tuples) {
+                          const int *tuples,
+                          const int *frozensets) {
     PyObject **result = statics;
     // Start with some hard-coded values
     *result++ = Py_None;
@@ -629,6 +600,24 @@ int CPyStatics_Initialize(PyObject **statics,
             *result++ = obj;
         }
     }
+    if (frozensets) {
+        int num = *frozensets++;
+        while (num-- > 0) {
+            int num_items = *frozensets++;
+            PyObject *obj = PyFrozenSet_New(NULL);
+            if (obj == NULL) {
+                return -1;
+            }
+            for (int i = 0; i < num_items; i++) {
+                PyObject *item = statics[*frozensets++];
+                Py_INCREF(item);
+                if (PySet_Add(obj, item) == -1) {
+                    return -1;
+                }
+            }
+            *result++ = obj;
+        }
+    }
     return 0;
 }
 
@@ -639,7 +628,315 @@ CPy_Super(PyObject *builtins, PyObject *self) {
     if (!super_type)
         return NULL;
     PyObject *result = PyObject_CallFunctionObjArgs(
-        super_type, (PyObject*)self->ob_type, self, NULL);
+        super_type, (PyObject*)Py_TYPE(self), self, NULL);
     Py_DECREF(super_type);
     return result;
+}
+
+static bool import_single(PyObject *mod_id, PyObject **mod_static,
+                          PyObject *globals_id, PyObject *globals_name, PyObject *globals) {
+    if (*mod_static == Py_None) {
+        CPyModule *mod = PyImport_Import(mod_id);
+        if (mod == NULL) {
+            return false;
+        }
+        *mod_static = mod;
+    }
+
+    PyObject *mod_dict = PyImport_GetModuleDict();
+    CPyModule *globals_mod = CPyDict_GetItem(mod_dict, globals_id);
+    if (globals_mod == NULL) {
+        return false;
+    }
+    int ret = CPyDict_SetItem(globals, globals_name, globals_mod);
+    Py_DECREF(globals_mod);
+    if (ret < 0) {
+        return false;
+    }
+
+    return true;
+}
+
+// Table-driven import helper. See transform_import() in irbuild for the details.
+bool CPyImport_ImportMany(PyObject *modules, CPyModule **statics[], PyObject *globals,
+                          PyObject *tb_path, PyObject *tb_function, Py_ssize_t *tb_lines) {
+    for (Py_ssize_t i = 0; i < PyTuple_GET_SIZE(modules); i++) {
+        PyObject *module = PyTuple_GET_ITEM(modules, i);
+        PyObject *mod_id = PyTuple_GET_ITEM(module, 0);
+        PyObject *globals_id = PyTuple_GET_ITEM(module, 1);
+        PyObject *globals_name = PyTuple_GET_ITEM(module, 2);
+
+        if (!import_single(mod_id, statics[i], globals_id, globals_name, globals)) {
+            assert(PyErr_Occurred() && "error indicator should be set on bad import!");
+            PyObject *typ, *val, *tb;
+            PyErr_Fetch(&typ, &val, &tb);
+            const char *path = PyUnicode_AsUTF8(tb_path);
+            if (path == NULL) {
+                path = "<unable to display>";
+            }
+            const char *function = PyUnicode_AsUTF8(tb_function);
+            if (function == NULL) {
+                function = "<unable to display>";
+            }
+            PyErr_Restore(typ, val, tb);
+            CPy_AddTraceback(path, function, tb_lines[i], globals);
+            return false;
+        }
+    }
+    return true;
+}
+
+// This helper function is a simplification of cpython/ceval.c/import_from()
+static PyObject *CPyImport_ImportFrom(PyObject *module, PyObject *package_name,
+                                      PyObject *import_name, PyObject *as_name) {
+    // check if the imported module has an attribute by that name
+    PyObject *x = PyObject_GetAttr(module, import_name);
+    if (x == NULL) {
+        // if not, attempt to import a submodule with that name
+        PyObject *fullmodname = PyUnicode_FromFormat("%U.%U", package_name, import_name);
+        if (fullmodname == NULL) {
+            goto fail;
+        }
+
+        // The following code is a simplification of cpython/import.c/PyImport_GetModule()
+        x = PyObject_GetItem(module, fullmodname);
+        Py_DECREF(fullmodname);
+        if (x == NULL) {
+            goto fail;
+        }
+    }
+    return x;
+
+fail:
+    PyErr_Clear();
+    PyObject *package_path = PyModule_GetFilenameObject(module);
+    PyObject *errmsg = PyUnicode_FromFormat("cannot import name %R from %R (%S)",
+                                            import_name, package_name, package_path);
+    // NULL checks for errmsg and package_name done by PyErr_SetImportError.
+    PyErr_SetImportError(errmsg, package_name, package_path);
+    Py_DECREF(package_path);
+    Py_DECREF(errmsg);
+    return NULL;
+}
+
+PyObject *CPyImport_ImportFromMany(PyObject *mod_id, PyObject *names, PyObject *as_names,
+                                   PyObject *globals) {
+    PyObject *mod = PyImport_ImportModuleLevelObject(mod_id, globals, 0, names, 0);
+    if (mod == NULL) {
+        return NULL;
+    }
+
+    for (Py_ssize_t i = 0; i < PyTuple_GET_SIZE(names); i++) {
+        PyObject *name = PyTuple_GET_ITEM(names, i);
+        PyObject *as_name = PyTuple_GET_ITEM(as_names, i);
+        PyObject *obj = CPyImport_ImportFrom(mod, mod_id, name, as_name);
+        if (obj == NULL) {
+            Py_DECREF(mod);
+            return NULL;
+        }
+        int ret = CPyDict_SetItem(globals, as_name, obj);
+        Py_DECREF(obj);
+        if (ret < 0) {
+            Py_DECREF(mod);
+            return NULL;
+        }
+    }
+    return mod;
+}
+
+// From CPython
+static PyObject *
+CPy_BinopTypeError(PyObject *left, PyObject *right, const char *op) {
+    PyErr_Format(PyExc_TypeError,
+                 "unsupported operand type(s) for %.100s: "
+                 "'%.100s' and '%.100s'",
+                 op,
+                 Py_TYPE(left)->tp_name,
+                 Py_TYPE(right)->tp_name);
+    return NULL;
+}
+
+PyObject *
+CPy_CallReverseOpMethod(PyObject *left,
+                        PyObject *right,
+                        const char *op,
+                        _Py_Identifier *method) {
+    // Look up reverse method
+    PyObject *m = _PyObject_GetAttrId(right, method);
+    if (m == NULL) {
+        // If reverse method not defined, generate TypeError instead AttributeError
+        if (PyErr_ExceptionMatches(PyExc_AttributeError)) {
+            CPy_BinopTypeError(left, right, op);
+        }
+        return NULL;
+    }
+    // Call reverse method
+    PyObject *result = PyObject_CallOneArg(m, left);
+    Py_DECREF(m);
+    return result;
+}
+
+PyObject *CPySingledispatch_RegisterFunction(PyObject *singledispatch_func,
+                                             PyObject *cls,
+                                             PyObject *func) {
+    PyObject *registry = PyObject_GetAttrString(singledispatch_func, "registry");
+    PyObject *register_func = NULL;
+    PyObject *typing = NULL;
+    PyObject *get_type_hints = NULL;
+    PyObject *type_hints = NULL;
+
+    if (registry == NULL) goto fail;
+    if (func == NULL) {
+        // one argument case
+        if (PyType_Check(cls)) {
+            // passed a class
+            // bind cls to the first argument so that register gets called again with both the
+            // class and the function
+            register_func = PyObject_GetAttrString(singledispatch_func, "register");
+            if (register_func == NULL) goto fail;
+            return PyMethod_New(register_func, cls);
+        }
+        // passed a function
+        PyObject *annotations = PyFunction_GetAnnotations(cls);
+        const char *invalid_first_arg_msg =
+            "Invalid first argument to `register()`: %R. "
+            "Use either `@register(some_class)` or plain `@register` "
+            "on an annotated function.";
+
+        if (annotations == NULL) {
+            PyErr_Format(PyExc_TypeError, invalid_first_arg_msg, cls);
+            goto fail;
+        }
+
+        Py_INCREF(annotations);
+
+        func = cls;
+        typing = PyImport_ImportModule("typing");
+        if (typing == NULL) goto fail;
+        get_type_hints = PyObject_GetAttrString(typing, "get_type_hints");
+
+        type_hints = PyObject_CallOneArg(get_type_hints, func);
+        PyObject *argname;
+        Py_ssize_t pos = 0;
+        if (!PyDict_Next(type_hints, &pos, &argname, &cls)) {
+            // the functools implementation raises the same type error if annotations is an empty dict
+            PyErr_Format(PyExc_TypeError, invalid_first_arg_msg, cls);
+            goto fail;
+        }
+        if (!PyType_Check(cls)) {
+            const char *invalid_annotation_msg = "Invalid annotation for %R. %R is not a class.";
+            PyErr_Format(PyExc_TypeError, invalid_annotation_msg, argname, cls);
+            goto fail;
+        }
+    }
+    if (PyDict_SetItem(registry, cls, func) == -1) {
+        goto fail;
+    }
+
+    // clear the cache so we consider the newly added function when dispatching
+    PyObject *dispatch_cache = PyObject_GetAttrString(singledispatch_func, "dispatch_cache");
+    if (dispatch_cache == NULL) goto fail;
+    PyDict_Clear(dispatch_cache);
+
+    Py_INCREF(func);
+    return func;
+
+fail:
+    Py_XDECREF(registry);
+    Py_XDECREF(register_func);
+    Py_XDECREF(typing);
+    Py_XDECREF(get_type_hints);
+    Py_XDECREF(type_hints);
+    return NULL;
+
+}
+
+// Adapated from ceval.c GET_AITER
+PyObject *CPy_GetAIter(PyObject *obj)
+{
+    unaryfunc getter = NULL;
+    PyTypeObject *type = Py_TYPE(obj);
+
+    if (type->tp_as_async != NULL) {
+        getter = type->tp_as_async->am_aiter;
+    }
+
+    if (getter == NULL) {
+        PyErr_Format(PyExc_TypeError,
+                     "'async for' requires an object with "
+                     "__aiter__ method, got %.100s",
+                     type->tp_name);
+        Py_DECREF(obj);
+        return NULL;
+    }
+
+    PyObject *iter = (*getter)(obj);
+    if (!iter) {
+        return NULL;
+    }
+
+    if (Py_TYPE(iter)->tp_as_async == NULL ||
+        Py_TYPE(iter)->tp_as_async->am_anext == NULL) {
+
+        PyErr_Format(PyExc_TypeError,
+                     "'async for' received an object from __aiter__ "
+                     "that does not implement __anext__: %.100s",
+                     Py_TYPE(iter)->tp_name);
+        Py_DECREF(iter);
+        return NULL;
+    }
+
+    return iter;
+}
+
+// Adapated from ceval.c GET_ANEXT
+PyObject *CPy_GetANext(PyObject *aiter)
+{
+    unaryfunc getter = NULL;
+    PyObject *next_iter = NULL;
+    PyObject *awaitable = NULL;
+    PyTypeObject *type = Py_TYPE(aiter);
+
+    if (PyAsyncGen_CheckExact(aiter)) {
+        awaitable = type->tp_as_async->am_anext(aiter);
+        if (awaitable == NULL) {
+            goto error;
+        }
+    } else {
+        if (type->tp_as_async != NULL){
+            getter = type->tp_as_async->am_anext;
+        }
+
+        if (getter != NULL) {
+            next_iter = (*getter)(aiter);
+            if (next_iter == NULL) {
+                goto error;
+            }
+        }
+        else {
+            PyErr_Format(PyExc_TypeError,
+                         "'async for' requires an iterator with "
+                         "__anext__ method, got %.100s",
+                         type->tp_name);
+            goto error;
+        }
+
+        awaitable = CPyCoro_GetAwaitableIter(next_iter);
+        if (awaitable == NULL) {
+            _PyErr_FormatFromCause(
+                PyExc_TypeError,
+                "'async for' received an invalid object "
+                "from __anext__: %.100s",
+                Py_TYPE(next_iter)->tp_name);
+
+            Py_DECREF(next_iter);
+            goto error;
+        } else {
+            Py_DECREF(next_iter);
+        }
+    }
+
+    return awaitable;
+error:
+    return NULL;
 }

@@ -8,9 +8,14 @@
 
 #include <stdbool.h>
 #include <Python.h>
+#include "pythoncapi_compat.h"
 #include <frameobject.h>
 #include <assert.h>
 #include "mypyc_util.h"
+
+#if CPY_3_12_FEATURES
+#include "internal/pycore_frame.h"
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -21,7 +26,6 @@ extern "C" {
 
 /////////////////////////////////////////
 // Adapted from bltinmodule.c in Python 3.7.0
-#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 7
 _Py_IDENTIFIER(__mro_entries__);
 static PyObject*
 update_bases(PyObject *bases)
@@ -95,16 +99,8 @@ error:
     Py_XDECREF(new_bases);
     return NULL;
 }
-#else
-static PyObject*
-update_bases(PyObject *bases)
-{
-    return bases;
-}
-#endif
 
 // From Python 3.7's typeobject.c
-#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 6
 _Py_IDENTIFIER(__init_subclass__);
 static int
 init_subclass(PyTypeObject *type, PyObject *kwds)
@@ -133,13 +129,64 @@ init_subclass(PyTypeObject *type, PyObject *kwds)
     return 0;
 }
 
-#else
-static int
-init_subclass(PyTypeObject *type, PyObject *kwds)
+#if CPY_3_12_FEATURES
+
+static inline Py_ssize_t
+CPyLong_AsSsize_tAndOverflow(PyObject *vv, int *overflow)
 {
-    return 0;
+    /* This version by Tim Peters */
+    PyLongObject *v = (PyLongObject *)vv;
+    size_t x, prev;
+    Py_ssize_t res;
+    Py_ssize_t i;
+    int sign;
+
+    *overflow = 0;
+
+    res = -1;
+    i = CPY_LONG_TAG(v);
+
+    // TODO: Combine zero and non-zero cases helow?
+    if (likely(i == (1 << CPY_NON_SIZE_BITS))) {
+        res = CPY_LONG_DIGIT(v, 0);
+    } else if (likely(i == CPY_SIGN_ZERO)) {
+        res = 0;
+    } else if (i == ((1 << CPY_NON_SIZE_BITS) | CPY_SIGN_NEGATIVE)) {
+        res = -(sdigit)CPY_LONG_DIGIT(v, 0);
+    } else {
+        sign = 1;
+        x = 0;
+        if (i & CPY_SIGN_NEGATIVE) {
+            sign = -1;
+        }
+        i >>= CPY_NON_SIZE_BITS;
+        while (--i >= 0) {
+            prev = x;
+            x = (x << PyLong_SHIFT) + CPY_LONG_DIGIT(v, i);
+            if ((x >> PyLong_SHIFT) != prev) {
+                *overflow = sign;
+                goto exit;
+            }
+        }
+        /* Haven't lost any bits, but casting to long requires extra
+         * care (see comment above).
+         */
+        if (x <= (size_t)CPY_TAGGED_MAX) {
+            res = (Py_ssize_t)x * sign;
+        }
+        else if (sign < 0 && x == CPY_TAGGED_ABS_MIN) {
+            res = CPY_TAGGED_MIN;
+        }
+        else {
+            *overflow = sign;
+            /* res is already set to -1 */
+        }
+    }
+  exit:
+    return res;
 }
-#endif
+
+#else
 
 // Adapted from longobject.c in Python 3.7.0
 
@@ -168,11 +215,11 @@ CPyLong_AsSsize_tAndOverflow(PyObject *vv, int *overflow)
     i = Py_SIZE(v);
 
     if (likely(i == 1)) {
-        res = v->ob_digit[0];
+        res = CPY_LONG_DIGIT(v, 0);
     } else if (likely(i == 0)) {
         res = 0;
     } else if (i == -1) {
-        res = -(sdigit)v->ob_digit[0];
+        res = -(sdigit)CPY_LONG_DIGIT(v, 0);
     } else {
         sign = 1;
         x = 0;
@@ -182,7 +229,7 @@ CPyLong_AsSsize_tAndOverflow(PyObject *vv, int *overflow)
         }
         while (--i >= 0) {
             prev = x;
-            x = (x << PyLong_SHIFT) + v->ob_digit[i];
+            x = (x << PyLong_SHIFT) + CPY_LONG_DIGIT(v, i);
             if ((x >> PyLong_SHIFT) != prev) {
                 *overflow = sign;
                 goto exit;
@@ -206,6 +253,8 @@ CPyLong_AsSsize_tAndOverflow(PyObject *vv, int *overflow)
     return res;
 }
 
+#endif
+
 // Adapted from listobject.c in Python 3.7.0
 static int
 list_resize(PyListObject *self, Py_ssize_t newsize)
@@ -220,7 +269,7 @@ list_resize(PyListObject *self, Py_ssize_t newsize)
     */
     if (allocated >= newsize && newsize >= (allocated >> 1)) {
         assert(self->ob_item != NULL || newsize == 0);
-        Py_SIZE(self) = newsize;
+        Py_SET_SIZE(self, newsize);
         return 0;
     }
 
@@ -248,7 +297,7 @@ list_resize(PyListObject *self, Py_ssize_t newsize)
         return -1;
     }
     self->ob_item = items;
-    Py_SIZE(self) = newsize;
+    Py_SET_SIZE(self, newsize);
     self->allocated = new_allocated;
     return 0;
 }
@@ -305,7 +354,7 @@ list_count(PyListObject *self, PyObject *value)
     return CPyTagged_ShortFromSsize_t(count);
 }
 
-#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION < 8
+#if PY_VERSION_HEX < 0x03080000
 static PyObject *
 _PyDict_GetItemStringWithError(PyObject *v, const char *key)
 {
@@ -320,13 +369,7 @@ _PyDict_GetItemStringWithError(PyObject *v, const char *key)
 }
 #endif
 
-#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION < 6
-/* _PyUnicode_EqualToASCIIString got added in 3.5.3 (argh!) so we can't actually know
- * whether it will be precent at runtime, so we just assume we don't have it in 3.5. */
-#define CPyUnicode_EqualToASCIIString(x, y) (PyUnicode_CompareWithASCIIString((x), (y)) == 0)
-#elif PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >= 6
 #define CPyUnicode_EqualToASCIIString(x, y) _PyUnicode_EqualToASCIIString(x, y)
-#endif
 
 // Adapted from genobject.c in Python 3.7.2
 // Copied because it wasn't in 3.5.2 and it is undocumented anyways.
@@ -349,7 +392,7 @@ CPyGen_SetStopIterationValue(PyObject *value)
         return 0;
     }
     /* Construct an exception instance manually with
-     * PyObject_CallFunctionObjArgs and pass it to PyErr_SetObject.
+     * PyObject_CallOneArg and pass it to PyErr_SetObject.
      *
      * We do this to handle a situation when "value" is a tuple, in which
      * case PyErr_SetObject would set the value of StopIteration to
@@ -357,7 +400,7 @@ CPyGen_SetStopIterationValue(PyObject *value)
      *
      * (See PyErr_SetObject/_PyErr_CreateException code for details.)
      */
-    e = PyObject_CallFunctionObjArgs(PyExc_StopIteration, value, NULL);
+    e = PyObject_CallOneArg(PyExc_StopIteration, value);
     if (e == NULL) {
         return -1;
     }
@@ -389,7 +432,7 @@ _CPyDictView_New(PyObject *dict, PyTypeObject *type)
 }
 #endif
 
-#if PY_MAJOR_VERSION >= 3 && PY_MINOR_VERSION >=10
+#if PY_VERSION_HEX >= 0x030A0000  // 3.10
 static int
 _CPyObject_HasAttrId(PyObject *v, _Py_Identifier *name) {
     PyObject *tmp = NULL;
@@ -402,5 +445,104 @@ _CPyObject_HasAttrId(PyObject *v, _Py_Identifier *name) {
 #else
 #define _CPyObject_HasAttrId _PyObject_HasAttrId
 #endif
+
+#if PY_VERSION_HEX < 0x03090000
+// OneArgs and NoArgs functions got added in 3.9
+#define _PyObject_CallMethodIdNoArgs(self, name) \
+    _PyObject_CallMethodIdObjArgs((self), (name), NULL)
+#define _PyObject_CallMethodIdOneArg(self, name, arg) \
+    _PyObject_CallMethodIdObjArgs((self), (name), (arg), NULL)
+#endif
+
+#if CPY_3_12_FEATURES
+
+// These are copied from genobject.c in Python 3.12
+
+/* Returns a borrowed reference */
+static inline PyCodeObject *
+_PyGen_GetCode(PyGenObject *gen) {
+    _PyInterpreterFrame *frame = (_PyInterpreterFrame *)(gen->gi_iframe);
+    return frame->f_code;
+}
+
+static int
+gen_is_coroutine(PyObject *o)
+{
+    if (PyGen_CheckExact(o)) {
+        PyCodeObject *code = _PyGen_GetCode((PyGenObject*)o);
+        if (code->co_flags & CO_ITERABLE_COROUTINE) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+#else
+
+// Copied from genobject.c in Python 3.10
+static int
+gen_is_coroutine(PyObject *o)
+{
+    if (PyGen_CheckExact(o)) {
+        PyCodeObject *code = (PyCodeObject *)((PyGenObject*)o)->gi_code;
+        if (code->co_flags & CO_ITERABLE_COROUTINE) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+#endif
+
+/*
+ *   This helper function returns an awaitable for `o`:
+ *     - `o` if `o` is a coroutine-object;
+ *     - `type(o)->tp_as_async->am_await(o)`
+ *
+ *   Raises a TypeError if it's not possible to return
+ *   an awaitable and returns NULL.
+ */
+static PyObject *
+CPyCoro_GetAwaitableIter(PyObject *o)
+{
+    unaryfunc getter = NULL;
+    PyTypeObject *ot;
+
+    if (PyCoro_CheckExact(o) || gen_is_coroutine(o)) {
+        /* 'o' is a coroutine. */
+        Py_INCREF(o);
+        return o;
+    }
+
+    ot = Py_TYPE(o);
+    if (ot->tp_as_async != NULL) {
+        getter = ot->tp_as_async->am_await;
+    }
+    if (getter != NULL) {
+        PyObject *res = (*getter)(o);
+        if (res != NULL) {
+            if (PyCoro_CheckExact(res) || gen_is_coroutine(res)) {
+                /* __await__ must return an *iterator*, not
+                   a coroutine or another awaitable (see PEP 492) */
+                PyErr_SetString(PyExc_TypeError,
+                                "__await__() returned a coroutine");
+                Py_CLEAR(res);
+            } else if (!PyIter_Check(res)) {
+                PyErr_Format(PyExc_TypeError,
+                             "__await__() returned non-iterator "
+                             "of type '%.100s'",
+                             Py_TYPE(res)->tp_name);
+                Py_CLEAR(res);
+            }
+        }
+        return res;
+    }
+
+    PyErr_Format(PyExc_TypeError,
+                 "object %.100s can't be used in 'await' expression",
+                 ot->tp_name);
+    return NULL;
+}
+
 
 #endif

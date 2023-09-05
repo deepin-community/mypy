@@ -1,110 +1,111 @@
 import sys
 from _typeshed import StrPath
-from typing import Any, Optional, Protocol
+from py_compile import PycInvalidationMode
+from typing import Any, Protocol
 
-if sys.version_info >= (3, 7):
-    from py_compile import PycInvalidationMode
+__all__ = ["compile_dir", "compile_file", "compile_path"]
 
 class _SupportsSearch(Protocol):
     def search(self, string: str) -> Any: ...
 
-if sys.version_info >= (3, 9):
+if sys.version_info >= (3, 10):
     def compile_dir(
         dir: StrPath,
-        maxlevels: Optional[int] = ...,
-        ddir: Optional[StrPath] = ...,
-        force: bool = ...,
-        rx: Optional[_SupportsSearch] = ...,
-        quiet: int = ...,
-        legacy: bool = ...,
-        optimize: int = ...,
-        workers: int = ...,
-        invalidation_mode: Optional[PycInvalidationMode] = ...,
+        maxlevels: int | None = None,
+        ddir: StrPath | None = None,
+        force: bool = False,
+        rx: _SupportsSearch | None = None,
+        quiet: int = 0,
+        legacy: bool = False,
+        optimize: int = -1,
+        workers: int = 1,
+        invalidation_mode: PycInvalidationMode | None = None,
         *,
-        stripdir: Optional[str] = ...,  # TODO: change to Optional[StrPath] once https://bugs.python.org/issue40447 is resolved
-        prependdir: Optional[StrPath] = ...,
-        limit_sl_dest: Optional[StrPath] = ...,
-        hardlink_dupes: bool = ...,
+        stripdir: StrPath | None = None,
+        prependdir: StrPath | None = None,
+        limit_sl_dest: StrPath | None = None,
+        hardlink_dupes: bool = False,
     ) -> int: ...
     def compile_file(
         fullname: StrPath,
-        ddir: Optional[StrPath] = ...,
-        force: bool = ...,
-        rx: Optional[_SupportsSearch] = ...,
-        quiet: int = ...,
-        legacy: bool = ...,
-        optimize: int = ...,
-        invalidation_mode: Optional[PycInvalidationMode] = ...,
+        ddir: StrPath | None = None,
+        force: bool = False,
+        rx: _SupportsSearch | None = None,
+        quiet: int = 0,
+        legacy: bool = False,
+        optimize: int = -1,
+        invalidation_mode: PycInvalidationMode | None = None,
         *,
-        stripdir: Optional[str] = ...,  # TODO: change to Optional[StrPath] once https://bugs.python.org/issue40447 is resolved
-        prependdir: Optional[StrPath] = ...,
-        limit_sl_dest: Optional[StrPath] = ...,
-        hardlink_dupes: bool = ...,
+        stripdir: StrPath | None = None,
+        prependdir: StrPath | None = None,
+        limit_sl_dest: StrPath | None = None,
+        hardlink_dupes: bool = False,
     ) -> int: ...
 
-elif sys.version_info >= (3, 7):
+elif sys.version_info >= (3, 9):
     def compile_dir(
         dir: StrPath,
-        maxlevels: int = ...,
-        ddir: Optional[StrPath] = ...,
-        force: bool = ...,
-        rx: Optional[_SupportsSearch] = ...,
-        quiet: int = ...,
-        legacy: bool = ...,
-        optimize: int = ...,
-        workers: int = ...,
-        invalidation_mode: Optional[PycInvalidationMode] = ...,
+        maxlevels: int | None = None,
+        ddir: StrPath | None = None,
+        force: bool = False,
+        rx: _SupportsSearch | None = None,
+        quiet: int = 0,
+        legacy: bool = False,
+        optimize: int = -1,
+        workers: int = 1,
+        invalidation_mode: PycInvalidationMode | None = None,
+        *,
+        stripdir: str | None = None,  # https://bugs.python.org/issue40447
+        prependdir: StrPath | None = None,
+        limit_sl_dest: StrPath | None = None,
+        hardlink_dupes: bool = False,
     ) -> int: ...
     def compile_file(
         fullname: StrPath,
-        ddir: Optional[StrPath] = ...,
-        force: bool = ...,
-        rx: Optional[_SupportsSearch] = ...,
-        quiet: int = ...,
-        legacy: bool = ...,
-        optimize: int = ...,
-        invalidation_mode: Optional[PycInvalidationMode] = ...,
+        ddir: StrPath | None = None,
+        force: bool = False,
+        rx: _SupportsSearch | None = None,
+        quiet: int = 0,
+        legacy: bool = False,
+        optimize: int = -1,
+        invalidation_mode: PycInvalidationMode | None = None,
+        *,
+        stripdir: str | None = None,  # https://bugs.python.org/issue40447
+        prependdir: StrPath | None = None,
+        limit_sl_dest: StrPath | None = None,
+        hardlink_dupes: bool = False,
     ) -> int: ...
 
 else:
     def compile_dir(
         dir: StrPath,
-        maxlevels: int = ...,
-        ddir: Optional[StrPath] = ...,
-        force: bool = ...,
-        rx: Optional[_SupportsSearch] = ...,
-        quiet: int = ...,
-        legacy: bool = ...,
-        optimize: int = ...,
-        workers: int = ...,
+        maxlevels: int = 10,
+        ddir: StrPath | None = None,
+        force: bool = False,
+        rx: _SupportsSearch | None = None,
+        quiet: int = 0,
+        legacy: bool = False,
+        optimize: int = -1,
+        workers: int = 1,
+        invalidation_mode: PycInvalidationMode | None = None,
     ) -> int: ...
     def compile_file(
         fullname: StrPath,
-        ddir: Optional[StrPath] = ...,
-        force: bool = ...,
-        rx: Optional[_SupportsSearch] = ...,
-        quiet: int = ...,
-        legacy: bool = ...,
-        optimize: int = ...,
+        ddir: StrPath | None = None,
+        force: bool = False,
+        rx: _SupportsSearch | None = None,
+        quiet: int = 0,
+        legacy: bool = False,
+        optimize: int = -1,
+        invalidation_mode: PycInvalidationMode | None = None,
     ) -> int: ...
 
-if sys.version_info >= (3, 7):
-    def compile_path(
-        skip_curdir: bool = ...,
-        maxlevels: int = ...,
-        force: bool = ...,
-        quiet: int = ...,
-        legacy: bool = ...,
-        optimize: int = ...,
-        invalidation_mode: Optional[PycInvalidationMode] = ...,
-    ) -> int: ...
-
-else:
-    def compile_path(
-        skip_curdir: bool = ...,
-        maxlevels: int = ...,
-        force: bool = ...,
-        quiet: int = ...,
-        legacy: bool = ...,
-        optimize: int = ...,
-    ) -> int: ...
+def compile_path(
+    skip_curdir: bool = ...,
+    maxlevels: int = 0,
+    force: bool = False,
+    quiet: int = 0,
+    legacy: bool = False,
+    optimize: int = -1,
+    invalidation_mode: PycInvalidationMode | None = None,
+) -> int: ...

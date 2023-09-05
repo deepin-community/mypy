@@ -1,40 +1,40 @@
+from _typeshed import SupportsWrite
 from email.message import Message
 from email.policy import Policy
-from typing import BinaryIO, Optional, TextIO
+from typing_extensions import Self
+
+__all__ = ["Generator", "DecodedGenerator", "BytesGenerator"]
 
 class Generator:
-    def clone(self, fp: TextIO) -> Generator: ...
+    def clone(self, fp: SupportsWrite[str]) -> Self: ...
     def write(self, s: str) -> None: ...
     def __init__(
         self,
-        outfp: TextIO,
-        mangle_from_: Optional[bool] = ...,
-        maxheaderlen: Optional[int] = ...,
+        outfp: SupportsWrite[str],
+        mangle_from_: bool | None = None,
+        maxheaderlen: int | None = None,
         *,
-        policy: Optional[Policy] = ...,
+        policy: Policy | None = None,
     ) -> None: ...
-    def flatten(self, msg: Message, unixfrom: bool = ..., linesep: Optional[str] = ...) -> None: ...
+    def flatten(self, msg: Message, unixfrom: bool = False, linesep: str | None = None) -> None: ...
 
-class BytesGenerator:
-    def clone(self, fp: BinaryIO) -> BytesGenerator: ...
-    def write(self, s: str) -> None: ...
+class BytesGenerator(Generator):
     def __init__(
         self,
-        outfp: BinaryIO,
-        mangle_from_: Optional[bool] = ...,
-        maxheaderlen: Optional[int] = ...,
+        outfp: SupportsWrite[bytes],
+        mangle_from_: bool | None = None,
+        maxheaderlen: int | None = None,
         *,
-        policy: Optional[Policy] = ...,
+        policy: Policy | None = None,
     ) -> None: ...
-    def flatten(self, msg: Message, unixfrom: bool = ..., linesep: Optional[str] = ...) -> None: ...
 
 class DecodedGenerator(Generator):
     def __init__(
         self,
-        outfp: TextIO,
-        mangle_from_: Optional[bool] = ...,
-        maxheaderlen: Optional[int] = ...,
-        fmt: Optional[str] = ...,
+        outfp: SupportsWrite[str],
+        mangle_from_: bool | None = None,
+        maxheaderlen: int | None = None,
+        fmt: str | None = None,
         *,
-        policy: Optional[Policy] = ...,
+        policy: Policy | None = None,
     ) -> None: ...

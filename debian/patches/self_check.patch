@@ -1,0 +1,48 @@
+From 2037e4a068df6e1dcc8f76c37f53e04d62d64e80 Mon Sep 17 00:00:00 2001
+From: Shantanu <12621235+hauntsaninja@users.noreply.github.com>
+Date: Sun, 25 Feb 2024 14:44:49 -0800
+Subject: [PATCH] Workaround parenthesised context manager issue (#16949)
+Origin: upstream,https://github.com/python/mypy/pull/16949
+Forwarded: not-needed
+
+Fixes #16945
+---
+ mypy/checker.py | 18 ++++++------------
+ 1 file changed, 6 insertions(+), 12 deletions(-)
+
+diff --git a/mypy/checker.py b/mypy/checker.py
+index 56be3db3f9e7..9f987cb5ccdf 100644
+--- a/mypy/checker.py
++++ b/mypy/checker.py
+@@ -4,7 +4,7 @@
+ 
+ import itertools
+ from collections import defaultdict
+-from contextlib import contextmanager, nullcontext
++from contextlib import ExitStack, contextmanager
+ from typing import (
+     AbstractSet,
+     Callable,
+@@ -526,17 +526,11 @@ def check_second_pass(
+                     # print("XXX in pass %d, class %s, function %s" %
+                     #       (self.pass_num, type_name, node.fullname or node.name))
+                     done.add(node)
+-                    with (
+-                        self.tscope.class_scope(active_typeinfo)
+-                        if active_typeinfo
+-                        else nullcontext()
+-                    ):
+-                        with (
+-                            self.scope.push_class(active_typeinfo)
+-                            if active_typeinfo
+-                            else nullcontext()
+-                        ):
+-                            self.check_partial(node)
++                    with ExitStack() as stack:
++                        if active_typeinfo:
++                            stack.enter_context(self.tscope.class_scope(active_typeinfo))
++                            stack.enter_context(self.scope.push_class(active_typeinfo))
++                        self.check_partial(node)
+             return True
+ 
+     def check_partial(self, node: DeferredNodeType | FineGrainedDeferredNodeType) -> None:

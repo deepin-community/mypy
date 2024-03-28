@@ -1,0 +1,30 @@
+From eb84794bd02b20e051103f91b6d1dcb01c0e342c Mon Sep 17 00:00:00 2001
+From: Alex Waygood <Alex.Waygood@Gmail.com>
+Date: Sun, 18 Feb 2024 13:33:59 +0000
+Subject: FIx stubtest's tests to work with the latest version of `typing_extensions`
+Origin: upstream,https://github.com/python/mypy/commit/eb84794bd02b20e051103f91b6d1dcb01c0e342c
+Forwarded: not-needed
+
+Stubtest's tests will start failing when `typing_extensions==4.10.0`
+comes out, due to some new `ClassVar`s on `typing_extensions.TypedDict`.
+This PR fixes that.
+
+Fixes https://github.com/python/typing_extensions/issues/339. Note:
+there's no need to cherry-pick this to the `release-1.9.0` branch, since
+the daily workflow `typing_extensions` uses runs mypy's tests using the
+mypy `master` branch.
+---
+ test-data/unit/lib-stub/typing_extensions.pyi | 2 ++
+ 1 file changed, 2 insertions(+)
+
+--- mypy.orig/test-data/unit/lib-stub/typing_extensions.pyi
++++ mypy/test-data/unit/lib-stub/typing_extensions.pyi
+@@ -61,6 +61,8 @@
+     __optional_keys__: frozenset[str]
+     __readonly_keys__: frozenset[str]
+     __mutable_keys__: frozenset[str]
++    __closed__: bool
++    __extra_items__: Any
+     __total__: bool
+ 
+ def TypedDict(typename: str, fields: Dict[str, Type[_T]], *, total: Any = ...) -> Type[dict]: ...

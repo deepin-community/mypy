@@ -10,6 +10,7 @@ AST node type to code that actually does the bulk of the work. For
 example, expressions are transformed in mypyc.irbuild.expression and
 functions are transformed in mypyc.irbuild.function.
 """
+
 from __future__ import annotations
 
 from contextlib import contextmanager
@@ -165,6 +166,9 @@ class IRBuilder:
         self.runtime_args: list[list[RuntimeArg]] = [[]]
         self.function_name_stack: list[str] = []
         self.class_ir_stack: list[ClassIR] = []
+        # Keep track of whether the next statement in a block is reachable
+        # or not, separately for each block nesting level
+        self.block_reachable_stack: list[bool] = [True]
 
         self.current_module = current_module
         self.mapper = mapper
@@ -172,6 +176,7 @@ class IRBuilder:
         self.graph = graph
         self.ret_types: list[RType] = []
         self.functions: list[FuncIR] = []
+        self.function_names: set[tuple[str | None, str]] = set()
         self.classes: list[ClassIR] = []
         self.final_names: list[tuple[str, RType]] = []
         self.callable_class_names: set[str] = set()
@@ -227,12 +232,10 @@ class IRBuilder:
         self.builder.set_module(module_name, module_path)
 
     @overload
-    def accept(self, node: Expression, *, can_borrow: bool = False) -> Value:
-        ...
+    def accept(self, node: Expression, *, can_borrow: bool = False) -> Value: ...
 
     @overload
-    def accept(self, node: Statement) -> None:
-        ...
+    def accept(self, node: Statement) -> None: ...
 
     def accept(self, node: Statement | Expression, *, can_borrow: bool = False) -> Value | None:
         """Transform an expression or a statement.
@@ -501,6 +504,11 @@ class IRBuilder:
     def non_function_scope(self) -> bool:
         # Currently the stack always has at least two items: dummy and top-level.
         return len(self.fn_infos) <= 2
+
+    def top_level_fn_info(self) -> FuncInfo | None:
+        if self.non_function_scope():
+            return None
+        return self.fn_infos[2]
 
     def init_final_static(
         self,
@@ -1297,6 +1305,14 @@ class IRBuilder:
             and not obj_rtype.class_ir.get_method(expr.name)
         )
 
+    def mark_block_unreachable(self) -> None:
+        """Mark statements in the innermost block being processed as unreachable.
+
+        This should be called after a statement that unconditionally leaves the
+        block, such as 'break' or 'return'.
+        """
+        self.block_reachable_stack[-1] = False
+
     # Lacks a good type because there wasn't a reasonable type in 3.5 :(
     def catch_errors(self, line: int) -> Any:
         return catch_errors(self.module_path, line)
@@ -1309,6 +1325,14 @@ class IRBuilder:
 
     def note(self, msg: str, line: int) -> None:
         self.errors.note(msg, self.module_path, line)
+
+    def add_function(self, func_ir: FuncIR, line: int) -> None:
+        name = (func_ir.class_name, func_ir.name)
+        if name in self.function_names:
+            self.error(f'Duplicate definition of "{name[1]}" not supported by mypyc', line)
+            return
+        self.function_names.add(name)
+        self.functions.append(func_ir)
 
 
 def gen_arg_defaults(builder: IRBuilder) -> None:

@@ -1,0 +1,55 @@
+Author: Michael R. Crusoe <crusoe@debian.org>
+Co-authored-by: Markus Demleitner <msdemlei@fsfe.org>
+Forwarded: not-needed
+Description: point to python3-typeshed package for missing types
+
+--- mypy.orig/mypy/modulefinder.py
++++ mypy/mypy/modulefinder.py
+@@ -83,7 +83,9 @@
+             notes = [doc_link]
+         elif self is ModuleNotFoundReason.APPROVED_STUBS_NOT_INSTALLED:
+             msg = 'Library stubs not installed for "{module}"'
+-            notes = ['Hint: "python3 -m pip install {stub_dist}"']
++            notes = ['Hint: On Debian systems, you can install the python3-typeshed package to '
++                     'provide mypy with stubs for many popular libraries. '
++                     'In virtual Python environments, you can instead run "python3 -m pip install {stub_dist}".']
+             if not daemon:
+                 notes.append(
+                     '(or run "mypy --install-types" to install all missing stub packages)'
+--- mypy.orig/test-data/unit/fine-grained-modules.test
++++ mypy/test-data/unit/fine-grained-modules.test
+@@ -2199,12 +2199,12 @@
+ import jack
+ [out]
+ a.py:1: error: Library stubs not installed for "requests"
+-a.py:1: note: Hint: "python3 -m pip install types-requests"
++a.py:1: note: Hint: On Debian systems, you can install the python3-typeshed package to provide mypy with stubs for many popular libraries. In virtual Python environments, you can instead run "python3 -m pip install types-requests".
+ a.py:1: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+ ==
+ ==
+ a.py:1: error: Library stubs not installed for "jack"
+-a.py:1: note: Hint: "python3 -m pip install types-JACK-Client"
++a.py:1: note: Hint: On Debian systems, you can install the python3-typeshed package to provide mypy with stubs for many popular libraries. In virtual Python environments, you can instead run "python3 -m pip install types-JACK-Client".
+ a.py:1: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+ 
+ [case testIgnoreErrorsFromTypeshed]
+--- mypy.orig/test-data/unit/check-modules.test
++++ mypy/test-data/unit/check-modules.test
+@@ -3130,7 +3130,7 @@
+ from google.non_existent import x
+ 
+ import google.cloud.ndb  # E: Library stubs not installed for "google.cloud.ndb" \
+-                         # N: Hint: "python3 -m pip install types-google-cloud-ndb" \
++                         # N: Hint: On Debian systems, you can install the python3-typeshed package to provide mypy with stubs for many popular libraries. In virtual Python environments, you can instead run "python3 -m pip install types-google-cloud-ndb". \
+                          # N: (or run "mypy --install-types" to install all missing stub packages) \
+                          # N: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+ from google.cloud import ndb
+@@ -3141,7 +3141,7 @@
+ [file bleach/__init__.pyi]
+ [out]
+ main:1: error: Library stubs not installed for "bleach.xyz"
+-main:1: note: Hint: "python3 -m pip install types-bleach"
++main:1: note: Hint: On Debian systems, you can install the python3-typeshed package to provide mypy with stubs for many popular libraries. In virtual Python environments, you can instead run "python3 -m pip install types-bleach".
+ main:1: note: (or run "mypy --install-types" to install all missing stub packages)
+ main:1: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+ main:2: error: Library stubs not installed for "bleach.abc"

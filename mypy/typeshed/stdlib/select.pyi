@@ -2,8 +2,8 @@ import sys
 from _typeshed import FileDescriptorLike
 from collections.abc import Iterable
 from types import TracebackType
-from typing import Any
-from typing_extensions import Self, final
+from typing import Any, final
+from typing_extensions import Self
 
 if sys.platform != "win32":
     PIPE_BUF: int
@@ -15,7 +15,8 @@ if sys.platform != "win32":
     POLLOUT: int
     POLLPRI: int
     POLLRDBAND: int
-    POLLRDHUP: int
+    if sys.platform == "linux":
+        POLLRDHUP: int
     POLLRDNORM: int
     POLLWRBAND: int
     POLLWRNORM: int
@@ -136,7 +137,6 @@ if sys.platform == "linux":
     EPOLLRDNORM: int
     EPOLLWRBAND: int
     EPOLLWRNORM: int
-    EPOLL_RDHUP: int
     EPOLL_CLOEXEC: int
 
 if sys.platform != "linux" and sys.platform != "darwin" and sys.platform != "win32":

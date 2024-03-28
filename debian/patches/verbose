@@ -7,11 +7,9 @@ Forwarded: not-needed
  setup.py | 1 +
  1 file changed, 1 insertion(+)
 
-diff --git a/setup.py b/setup.py
-index bbb655e..eb6d57b 100644
---- a/setup.py
-+++ b/setup.py
-@@ -173,6 +173,7 @@ if USE_MYPYC:
+--- mypy.orig/setup.py
++++ mypy/setup.py
+@@ -172,6 +172,7 @@
          # Use multi-file compilation mode on windows because without it
          # our Appveyor builds run out of memory sometimes.
          multi_file=sys.platform == "win32" or force_multifile,

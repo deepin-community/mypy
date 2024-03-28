@@ -12,13 +12,12 @@ endif
 export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 include /usr/share/dpkg/default.mk
 
-ifneq (,$(filter $(DEB_BUILD_ARCH),hppa armel armhf))
-  export MYPYC_OPT_LEVEL=2
-else ifeq ($(DEB_HOST_ARCH_BITS), 32)
-  export DEB_CFLAGS_MAINT_APPEND += -g1
-  export DEB_CXXFLAGS_MAINT_APPEND += -g1
+ifneq (,$(filter $(DEB_BUILD_ARCH),armel armhf hppa riscv64 mipsel alpha ia64 m68k powerpc sh4 sparc64))
+  export MYPYC_MULTI_FILE=1
 endif
-
+ifneq (,$(filter $(DEB_HOST_ARCH),mips64el))
+  export DEB_CFLAGS_MAINT_APPEND += -mxgot
+endif
 
 %:
 	dh $@ $(WITH) --buildsystem=pybuild
@@ -43,11 +42,7 @@ debian/sphinx/stubgen_options.rst: docs/source/stubgen.rst
 	sed -n -e '/stubgen --help/,$$ {/stubgen --help/d; p}' $< > $@
 
 override_dh_auto_build-arch:
-ifneq (,$(filter $(DEB_BUILD_ARCH), mips64el mipsel alpha ia64 m68k powerpc riscv64 sh4 sparc64))
-	MYPY_USE_MYPYC=0 dh_auto_build
-else
 	MYPY_USE_MYPYC=1 dh_auto_build
-endif
 
 override_dh_auto_build-indep: manpages
 	MYPY_USE_MYPYC=0 dh_auto_build
@@ -80,9 +75,12 @@ ifeq (,$(filter nocheck,$(DEB_BUILD_PROFILES)))
 	dh_auto_install
 	set -e; for v in $(PY3VERS); do \
 		PYTHONPATH=$$(pybuild --print build_dir --pyver $$v | awk '{ print $$3 }') PATH=$$PATH:$(CURDIR)/debian/python3-mypy/usr/bin/ python$$v -m pytest -n auto \
-		-o testpaths="mypy/test mypyc/test" -o python_files=test*.py -k 'not (testCustomTypeshedDirWithRelativePathDoesNotCrash or PEP561Suite)' \
+		-o testpaths="mypy/test mypyc/test" -o python_files=test*.py -k 'not (testCustomTypeshedDirWithRelativePathDoesNotCrash or testNoPython3StubAvailable or testIgnoreImportIfNoPython3StubAvailable or PEP561Suite)' \
 		-o python_classes= -o python_functions= ; \
 	done
+	# testIgnoreImportIfNoPython3StubAvailable fails due to scribe not being installed (it isn't packaged for Debian)
+	# testNoPython3StubAvailable no longer work because python3-typeshed includes docutils types, which it isn't expecting
+	# PEP561Suite due to needing internet access to pypi.org
 endif
 
 override_dh_auto_test-indep:

@@ -1,0 +1,42 @@
+commit e5ff3c9a693825cdb815637209994d4e6eae50eb
+Author: Michael R. Crusoe <crusoe@debian.org>
+Date:   Tue Mar 26 12:44:25 2024 +0100
+Forwarded: https://github.com/python/mypy/pull/17066
+
+    fix for Pytest 8 compat
+
+--- mypy.orig/mypy/test/helpers.py
++++ mypy/mypy/test/helpers.py
+@@ -41,7 +41,7 @@
+     if status != 0:
+         sys.stdout.write(outval)
+         sys.stderr.write(errval)
+-        pytest.fail(msg="Sample check failed", pytrace=False)
++        pytest.fail(reason="Sample check failed", pytrace=False)
+ 
+ 
+ def diff_ranges(
+--- mypy.orig/pyproject.toml
++++ mypy/pyproject.toml
+@@ -88,7 +88,7 @@
+ ignore = ["**/.readthedocs.yaml"]
+ 
+ [tool.pytest.ini_options]
+-minversion = "6.0.0"
++minversion = "7.0.0"
+ testpaths = ["mypy/test", "mypyc/test"]
+ python_files = 'test*.py'
+ 
+--- mypy.orig/mypy/test/data.py
++++ mypy/mypy/test/data.py
+@@ -640,9 +640,7 @@
+             # Non-None result means this obj is a test case.
+             # The collect method of the returned DataSuiteCollector instance will be called later,
+             # with self.obj being obj.
+-            return DataSuiteCollector.from_parent(  # type: ignore[no-untyped-call]
+-                parent=collector, name=name
+-            )
++            return DataSuiteCollector.from_parent(parent=collector, name=name)
+     return None
+ 
+ 

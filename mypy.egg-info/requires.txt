@@ -10,6 +10,9 @@ psutil>=4.0
 [install-types]
 pip
 
+[mypyc]
+setuptools>=50
+
 [python2]
 
 [reports]

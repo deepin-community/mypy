@@ -1,3 +1,6 @@
+pytest8.patch
+typing_extensions_4.10.patch
+self_check.patch
+hint-typeshed-package
 verbose
 intersphinx
-python3.10.3

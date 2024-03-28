@@ -1,3 +1,103 @@
+mypy (1.9.0-4) unstable; urgency=medium
+
+  * d/{tests/,}control: Pin the minimum version of pytest
+  * d/rules: try MYPYC_MULTI_FILE=1 on weaker archs instead of other
+    build tricks.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Wed, 27 Mar 2024 07:45:33 +0100
+
+mypy (1.9.0-3) unstable; urgency=medium
+
+  * Added patch to fix FTBFS with Pytest 8.1+
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Tue, 26 Mar 2024 16:52:29 +0100
+
+mypy (1.9.0-2) unstable; urgency=medium
+
+  * d/patches/typing_extensions_4.10.path: cherry-pick from upstream.
+    Closes: #1065805.
+  * d/control: pin minimum version of the typing_extensions dependency to 4.10
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 11 Mar 2024 14:37:18 +0100
+
+mypy (1.9.0-1) unstable; urgency=medium
+
+  * New upstream version
+  * Refreshed patches.
+  * d/upstream/metadata: link to the changelog.
+  * d/patches/self_check.patch: cherry-picked from upstream.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Sat, 09 Mar 2024 09:33:10 +0100
+
+mypy (1.8.0-1) unstable; urgency=medium
+
+  * New upstream version
+  * d/patches: remove sphinx_7 which upstream merged.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Thu, 21 Dec 2023 18:42:00 +0100
+
+mypy (1.7.1-3) unstable; urgency=medium
+
+  * Missed a test fix for the Debian-specific typeshed advice.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Thu, 14 Dec 2023 21:17:15 +0100
+
+mypy (1.7.1-2) unstable; urgency=medium
+
+  * d/rules: Build fixes for mips64el (and hppa) courtesy of Adrian
+    Bunk.
+  * d/patches/hint-typeshed-package: mention the python3-typeshed Debian
+    package, when appropriate. Thanks to Markus Demleitner <msdemlei@fsfe.org>
+    for the suggestion (Closes: #1043266).
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Thu, 14 Dec 2023 12:47:14 +0100
+
+mypy (1.7.1-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Thu, 23 Nov 2023 19:16:19 +0100
+
+mypy (1.7.0-3) unstable; urgency=medium
+
+  * r/rules: skip compiling using mypyc on riscv64.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Thu, 16 Nov 2023 15:58:40 +0100
+
+mypy (1.7.0-2) unstable; urgency=medium
+
+  * d/rules: drop armhf down to -O1 due to persistant out of memory
+    errors on the buildbots.
+  * d/rules: reduce build-time gcc debugging level (to "-g1") for all 32-bit
+    archs.
+  * d/rules: try again to compile using mypyc on riscv64 and mips64el.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 13 Nov 2023 19:37:41 +0100
+
+mypy (1.7.0-1) unstable; urgency=medium
+
+  * New upstream version
+  * d/patches/sphinx_7: fix for newer Sphinx.
+  * d/rules: skip two tests that don't expect the docutils types we pull in
+             as part of python3-typeshed, and the PEP561Suite due to needing
+             internet access to PyPI
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 13 Nov 2023 11:26:34 +0100
+
+mypy (1.6.1-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 30 Oct 2023 20:22:23 +0100
+
+mypy (1.6.0-1) unstable; urgency=medium
+
+  * New upstream version
+  * d/patches: drop upstreamed patch for python3.10.3
+  * d/rules: remove skip of PEP561Suite
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Wed, 11 Oct 2023 12:10:28 +0200
+
 mypy (1.5.1-2) unstable; urgency=medium
 
   * Demote armel/armhf to "-O2".

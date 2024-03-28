@@ -9,7 +9,9 @@ mypy_self_check.ini
 pyproject.toml
 runtests.py
 setup.py
+test-requirements.in
 test-requirements.txt
+tox.ini
 docs/Makefile
 docs/README.md
 docs/make.bat
@@ -53,7 +55,6 @@ docs/source/supported_python_features.rst
 docs/source/type_inference_and_annotations.rst
 docs/source/type_narrowing.rst
 docs/source/typed_dict.rst
-misc/proper_plugin.py
 mypy/__init__.py
 mypy/__main__.py
 mypy/api.py
@@ -179,6 +180,7 @@ mypy/plugins/dataclasses.py
 mypy/plugins/default.py
 mypy/plugins/enums.py
 mypy/plugins/functools.py
+mypy/plugins/proper_plugin.py
 mypy/plugins/singledispatch.py
 mypy/server/__init__.py
 mypy/server/astdiff.py
@@ -234,6 +236,8 @@ mypy/test/typefixture.py
 mypy/test/update_data.py
 mypy/test/visitors.py
 mypy/test/meta/__init__.py
+mypy/test/meta/_pytest.py
+mypy/test/meta/test_diff_helper.py
 mypy/test/meta/test_parse_data.py
 mypy/test/meta/test_update_data.py
 mypy/typeshed/LICENSE
@@ -256,6 +260,7 @@ mypy/typeshed/stdlib/_dummy_threading.pyi
 mypy/typeshed/stdlib/_heapq.pyi
 mypy/typeshed/stdlib/_imp.pyi
 mypy/typeshed/stdlib/_json.pyi
+mypy/typeshed/stdlib/_locale.pyi
 mypy/typeshed/stdlib/_markupbase.pyi
 mypy/typeshed/stdlib/_msi.pyi
 mypy/typeshed/stdlib/_operator.pyi
@@ -352,7 +357,6 @@ mypy/typeshed/stdlib/keyword.pyi
 mypy/typeshed/stdlib/linecache.pyi
 mypy/typeshed/stdlib/locale.pyi
 mypy/typeshed/stdlib/lzma.pyi
-mypy/typeshed/stdlib/macpath.pyi
 mypy/typeshed/stdlib/mailbox.pyi
 mypy/typeshed/stdlib/mailcap.pyi
 mypy/typeshed/stdlib/marshal.pyi
@@ -364,6 +368,7 @@ mypy/typeshed/stdlib/msvcrt.pyi
 mypy/typeshed/stdlib/netrc.pyi
 mypy/typeshed/stdlib/nis.pyi
 mypy/typeshed/stdlib/nntplib.pyi
+mypy/typeshed/stdlib/nt.pyi
 mypy/typeshed/stdlib/ntpath.pyi
 mypy/typeshed/stdlib/nturl2path.pyi
 mypy/typeshed/stdlib/numbers.pyi
@@ -428,7 +433,6 @@ mypy/typeshed/stdlib/subprocess.pyi
 mypy/typeshed/stdlib/sunau.pyi
 mypy/typeshed/stdlib/symbol.pyi
 mypy/typeshed/stdlib/symtable.pyi
-mypy/typeshed/stdlib/sys.pyi
 mypy/typeshed/stdlib/sysconfig.pyi
 mypy/typeshed/stdlib/syslog.pyi
 mypy/typeshed/stdlib/tabnanny.pyi
@@ -464,7 +468,6 @@ mypy/typeshed/stdlib/winsound.pyi
 mypy/typeshed/stdlib/xdrlib.pyi
 mypy/typeshed/stdlib/xxlimited.pyi
 mypy/typeshed/stdlib/zipapp.pyi
-mypy/typeshed/stdlib/zipfile.pyi
 mypy/typeshed/stdlib/zipimport.pyi
 mypy/typeshed/stdlib/zlib.pyi
 mypy/typeshed/stdlib/_typeshed/__init__.pyi
@@ -511,6 +514,7 @@ mypy/typeshed/stdlib/concurrent/futures/_base.pyi
 mypy/typeshed/stdlib/concurrent/futures/process.pyi
 mypy/typeshed/stdlib/concurrent/futures/thread.pyi
 mypy/typeshed/stdlib/ctypes/__init__.pyi
+mypy/typeshed/stdlib/ctypes/_endian.pyi
 mypy/typeshed/stdlib/ctypes/util.pyi
 mypy/typeshed/stdlib/ctypes/wintypes.pyi
 mypy/typeshed/stdlib/curses/__init__.pyi
@@ -573,6 +577,7 @@ mypy/typeshed/stdlib/distutils/command/sdist.pyi
 mypy/typeshed/stdlib/distutils/command/upload.pyi
 mypy/typeshed/stdlib/email/__init__.pyi
 mypy/typeshed/stdlib/email/_header_value_parser.pyi
+mypy/typeshed/stdlib/email/_policybase.pyi
 mypy/typeshed/stdlib/email/base64mime.pyi
 mypy/typeshed/stdlib/email/charset.pyi
 mypy/typeshed/stdlib/email/contentmanager.pyi
@@ -610,13 +615,18 @@ mypy/typeshed/stdlib/http/cookiejar.pyi
 mypy/typeshed/stdlib/http/cookies.pyi
 mypy/typeshed/stdlib/http/server.pyi
 mypy/typeshed/stdlib/importlib/__init__.pyi
+mypy/typeshed/stdlib/importlib/_abc.pyi
 mypy/typeshed/stdlib/importlib/abc.pyi
 mypy/typeshed/stdlib/importlib/machinery.pyi
+mypy/typeshed/stdlib/importlib/readers.pyi
+mypy/typeshed/stdlib/importlib/simple.pyi
 mypy/typeshed/stdlib/importlib/util.pyi
 mypy/typeshed/stdlib/importlib/metadata/__init__.pyi
 mypy/typeshed/stdlib/importlib/metadata/_meta.pyi
 mypy/typeshed/stdlib/importlib/resources/__init__.pyi
 mypy/typeshed/stdlib/importlib/resources/abc.pyi
+mypy/typeshed/stdlib/importlib/resources/readers.pyi
+mypy/typeshed/stdlib/importlib/resources/simple.pyi
 mypy/typeshed/stdlib/json/__init__.pyi
 mypy/typeshed/stdlib/json/decoder.pyi
 mypy/typeshed/stdlib/json/encoder.pyi
@@ -728,6 +738,8 @@ mypy/typeshed/stdlib/pyexpat/errors.pyi
 mypy/typeshed/stdlib/pyexpat/model.pyi
 mypy/typeshed/stdlib/sqlite3/__init__.pyi
 mypy/typeshed/stdlib/sqlite3/dbapi2.pyi
+mypy/typeshed/stdlib/sys/__init__.pyi
+mypy/typeshed/stdlib/sys/_monitoring.pyi
 mypy/typeshed/stdlib/tkinter/__init__.pyi
 mypy/typeshed/stdlib/tkinter/colorchooser.pyi
 mypy/typeshed/stdlib/tkinter/commondialog.pyi
@@ -786,12 +798,15 @@ mypy/typeshed/stdlib/xml/parsers/expat/__init__.pyi
 mypy/typeshed/stdlib/xml/parsers/expat/errors.pyi
 mypy/typeshed/stdlib/xml/parsers/expat/model.pyi
 mypy/typeshed/stdlib/xml/sax/__init__.pyi
+mypy/typeshed/stdlib/xml/sax/_exceptions.pyi
 mypy/typeshed/stdlib/xml/sax/handler.pyi
 mypy/typeshed/stdlib/xml/sax/saxutils.pyi
 mypy/typeshed/stdlib/xml/sax/xmlreader.pyi
 mypy/typeshed/stdlib/xmlrpc/__init__.pyi
 mypy/typeshed/stdlib/xmlrpc/client.pyi
 mypy/typeshed/stdlib/xmlrpc/server.pyi
+mypy/typeshed/stdlib/zipfile/__init__.pyi
+mypy/typeshed/stdlib/zipfile/_path.pyi
 mypy/typeshed/stdlib/zoneinfo/__init__.pyi
 mypy/typeshed/stubs/mypy-extensions/mypy_extensions.pyi
 mypy/xml/mypy-html.css
@@ -1128,11 +1143,13 @@ test-data/packages/typedpkg_ns_b-stubs/typedpkg_ns-stubs/b/bbb.pyi
 test-data/packages/typedpkg_ns_b/typedpkg_ns/__init__.py
 test-data/packages/typedpkg_ns_b/typedpkg_ns/b/__init__.py
 test-data/packages/typedpkg_ns_b/typedpkg_ns/b/bbb.py
-test-data/pybind11_mypy_demo/pyproject.toml
-test-data/pybind11_mypy_demo/setup.py
-test-data/pybind11_mypy_demo/src/main.cpp
-test-data/pybind11_mypy_demo/stubgen/pybind11_mypy_demo/__init__.pyi
-test-data/pybind11_mypy_demo/stubgen/pybind11_mypy_demo/basics.pyi
+test-data/pybind11_fixtures/pyproject.toml
+test-data/pybind11_fixtures/setup.py
+test-data/pybind11_fixtures/expected_stubs_no_docs/pybind11_fixtures/__init__.pyi
+test-data/pybind11_fixtures/expected_stubs_no_docs/pybind11_fixtures/demo.pyi
+test-data/pybind11_fixtures/expected_stubs_with_docs/pybind11_fixtures/__init__.pyi
+test-data/pybind11_fixtures/expected_stubs_with_docs/pybind11_fixtures/demo.pyi
+test-data/pybind11_fixtures/src/main.cpp
 test-data/unit/README.md
 test-data/unit/check-abstract.test
 test-data/unit/check-annotated.test
@@ -1191,6 +1208,7 @@ test-data/unit/check-possibly-undefined.test
 test-data/unit/check-protocols.test
 test-data/unit/check-python310.test
 test-data/unit/check-python311.test
+test-data/unit/check-python312.test
 test-data/unit/check-python38.test
 test-data/unit/check-python39.test
 test-data/unit/check-recursive-types.test
@@ -1286,6 +1304,7 @@ test-data/unit/fixtures/classmethod.pyi
 test-data/unit/fixtures/complex.pyi
 test-data/unit/fixtures/complex_tuple.pyi
 test-data/unit/fixtures/dataclasses.pyi
+test-data/unit/fixtures/dict-full.pyi
 test-data/unit/fixtures/dict.pyi
 test-data/unit/fixtures/divmod.pyi
 test-data/unit/fixtures/exception.pyi
@@ -1298,6 +1317,7 @@ test-data/unit/fixtures/function.pyi
 test-data/unit/fixtures/isinstance.pyi
 test-data/unit/fixtures/isinstance_python3_10.pyi
 test-data/unit/fixtures/isinstancelist.pyi
+test-data/unit/fixtures/len.pyi
 test-data/unit/fixtures/list.pyi
 test-data/unit/fixtures/module.pyi
 test-data/unit/fixtures/module_all.pyi
@@ -1322,6 +1342,7 @@ test-data/unit/fixtures/typing-full.pyi
 test-data/unit/fixtures/typing-medium.pyi
 test-data/unit/fixtures/typing-namedtuple.pyi
 test-data/unit/fixtures/typing-override.pyi
+test-data/unit/fixtures/typing-typeddict-iror.pyi
 test-data/unit/fixtures/typing-typeddict.pyi
 test-data/unit/fixtures/union.pyi
 test-data/unit/lib-stub/_decimal.pyi
@@ -1355,6 +1376,7 @@ test-data/unit/lib-stub/attrs/converters.pyi
 test-data/unit/lib-stub/future/__init__.pyi
 test-data/unit/lib-stub/future/utils.pyi
 test-data/unit/plugins/add_classmethod.py
+test-data/unit/plugins/add_overloaded_method.py
 test-data/unit/plugins/arg_kinds.py
 test-data/unit/plugins/arg_names.py
 test-data/unit/plugins/attrhook.py

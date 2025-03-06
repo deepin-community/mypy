@@ -1,0 +1,30 @@
+From: "Michael R. Crusoe" <crusoe@debian.org>
+Date: Mon, 17 Feb 2025 19:40:07 +0100
+Subject: pythoncapi_compat: don't define Py_NULL if it is already defined
+
+Forwarded: https://github.com/python/mypy/pull/18699
+
+---
+ mypyc/lib-rt/pythoncapi_compat.h | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/mypyc/lib-rt/pythoncapi_compat.h b/mypyc/lib-rt/pythoncapi_compat.h
+index cee282d..c49af7a 100644
+--- a/mypyc/lib-rt/pythoncapi_compat.h
++++ b/mypyc/lib-rt/pythoncapi_compat.h
+@@ -33,6 +33,7 @@ extern "C" {
+ #  define _Py_CAST(type, expr) ((type)(expr))
+ #endif
+ 
++#ifndef _Py_NULL
+ // Static inline functions should use _Py_NULL rather than using directly NULL
+ // to prevent C++ compiler warnings. On C23 and newer and on C++11 and newer,
+ // _Py_NULL is defined as nullptr.
+@@ -42,6 +43,7 @@ extern "C" {
+ #else
+ #  define _Py_NULL NULL
+ #endif
++#endif
+ 
+ // Cast argument to PyObject* type.
+ #ifndef _PyObject_CAST

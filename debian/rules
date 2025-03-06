@@ -4,23 +4,28 @@ export PYBUILD_DESTDIR_python3=debian/python3-mypy
 export PYBUILD_NAME=mypy
 PY3VERS=$(shell py3versions -vr)
 
-include /usr/share/dpkg/pkg-info.mk
-ifeq (,$(filter nodoc,$(DEB_BUILD_PROFILES)))
-	WITH += --with sphinxdoc
-endif
-
-export DEB_BUILD_MAINT_OPTIONS=hardening=+all
 include /usr/share/dpkg/default.mk
 
-ifneq (,$(filter $(DEB_BUILD_ARCH),armel armhf hppa riscv64 mipsel alpha ia64 m68k powerpc sh4 sparc64))
+export DEB_BUILD_MAINT_OPTIONS=hardening=+all
+
+ifneq (,$(filter $(DEB_HOST_ARCH),armel armhf mips64el hppa riscv64 mipsel alpha ia64 m68k powerpc sh4 sparc64 hurd-i386 i386 x32 hurd-amd64))
   export MYPYC_MULTI_FILE=1
 endif
-ifneq (,$(filter $(DEB_HOST_ARCH),mips64el))
-  export DEB_CFLAGS_MAINT_APPEND += -mxgot
+
+ifneq ($(filter pkg.mypy.multifile,$(DEB_BUILD_PROFILES)),)
+  export MYPYC_MULTI_FILE=1
+endif
+
+export DEB_CFLAGS_MAINT_APPEND += -Wno-misleading-indentation
+
+export MYPYC_DEBUG_LEVEL=2
+
+ifneq ($(filter pkg.mypy.o1,$(DEB_BUILD_PROFILES)),)
+  export MYPYC_OPT_LEVEL=1
 endif
 
 %:
-	dh $@ $(WITH) --buildsystem=pybuild
+	dh $@  --buildsystem=pybuild
 
 ifeq (,$(filter nodoc,$(DEB_BUILD_PROFILES)))
 manpages: debian/sphinx/mypy_options.rst debian/sphinx/stubgen_options.rst debian/dmypy.1 debian/mypy.1 debian/stubgen.1
@@ -42,29 +47,36 @@ debian/sphinx/stubgen_options.rst: docs/source/stubgen.rst
 	sed -n -e '/stubgen --help/,$$ {/stubgen --help/d; p}' $< > $@
 
 override_dh_auto_build-arch:
-	MYPY_USE_MYPYC=1 dh_auto_build
+	echo "[build_ext]\nparallel=$(DEB_BUILD_OPTION_PARALLEL)\n" > $(CURDIR)/debian/extra-setup.cfg
+	DIST_EXTRA_CONFIG=$(CURDIR)/debian/extra-setup.cfg MYPY_USE_MYPYC=1 dh_auto_build
+	rm $(CURDIR)/debian/extra-setup.cfg
 
 override_dh_auto_build-indep: manpages
 	MYPY_USE_MYPYC=0 dh_auto_build
 ifeq (,$(filter nodoc,$(DEB_BUILD_PROFILES)))
 	PYTHONPATH=$(CURDIR) $(MAKE) -C docs html
+	PYTHONPATH=$(CURDIR) $(MAKE) -C mypyc/doc html
+	mv mypyc/doc/_build/html mypyc/doc/_build/mypyc
 endif
 
 
-override_dh_auto_clean:
-	dh_auto_clean
+execute_after_dh_auto_clean:
 ifeq (,$(filter nodoc,$(DEB_BUILD_PROFILES)))
 	$(MAKE) -C docs clean
+	$(MAKE) -C mypyc/doc clean
 	rm -rf debian/.doctrees
 	rm -f  debian/sphinx/dmypy_options.rst
 	rm -f  debian/sphinx/mypy_options.rst
 	rm -f  debian/sphinx/stubgen_options.rst
 endif
 
-override_dh_auto_install:
-	dh_auto_install
+execute_after_dh_auto_install:
 	dh_movefiles --package=mypy --sourcedir=debian/python3-mypy usr/bin
 	rm -Rf debian/python3-mypy/usr/bin
+	find debian -name LICENSE -delete
+
+execute_after_dh_python3:
+	rm -rf debian/python3-mypy/usr/lib/python3/dist-packages/mypyc/doc/
 
 override_dh_auto_test-arch:
 ifeq (,$(filter nocheck,$(DEB_BUILD_PROFILES)))
@@ -74,8 +86,8 @@ ifeq (,$(filter nocheck,$(DEB_BUILD_PROFILES)))
 		--config-file {dir}/mypy_self_check.ini -p mypy" dh_auto_test
 	dh_auto_install
 	set -e; for v in $(PY3VERS); do \
-		PYTHONPATH=$$(pybuild --print build_dir --pyver $$v | awk '{ print $$3 }') PATH=$$PATH:$(CURDIR)/debian/python3-mypy/usr/bin/ python$$v -m pytest -n auto \
-		-o testpaths="mypy/test mypyc/test" -o python_files=test*.py -k 'not (testCustomTypeshedDirWithRelativePathDoesNotCrash or testNoPython3StubAvailable or testIgnoreImportIfNoPython3StubAvailable or PEP561Suite)' \
+		env -u CFLAGS PYTHONPATH=$$(pybuild --print build_dir --pyver $$v | awk '{ print $$3 }') PATH=$$PATH:$(CURDIR)/debian/python3-mypy/usr/bin/ python$$v -m pytest -n $(DEB_BUILD_OPTION_PARALLEL) \
+		-o testpaths="mypy/test mypyc/test" -o python_files=test*.py -k 'not (testCustomTypeshedDirWithRelativePathDoesNotCrash or testNoPython3StubAvailable or testIgnoreImportIfNoPython3StubAvailable or PEP561Suite or testDaemonStatusKillRestartRecheck)' \
 		-o python_classes= -o python_functions= ; \
 	done
 	# testIgnoreImportIfNoPython3StubAvailable fails due to scribe not being installed (it isn't packaged for Debian)
@@ -85,5 +97,8 @@ endif
 
 override_dh_auto_test-indep:
 	echo No tests to run for the "mypy" package, only for "python3-mypy"
+
+download_remote_intersphinx_inventories:
+	curl https://monkeytype.readthedocs.io/en/latest/objects.inv -o debian/intersphinx/monkeytype_objects.inv
 
 .PHONY: manpages

@@ -6,13 +6,13 @@ Testsuite: autopkgtest-pkg-python
 Priority: optional
 Build-Depends: debhelper-compat (= 13),
                dh-sequence-python3,
+               dh-sequence-sphinxdoc <!nodoc>,
                python3-setuptools,
                pybuild-plugin-pyproject,
-               python3-wheel,
                flake8,
                help2man,
                python3-all,
-               python3-lxml,
+               python3-lxml (>= 4.9.1),
                python3-attr <!nocheck>,
                python3-pytest (>= 8.1.0) <!nocheck>,
                python3-pytest-xdist <!nocheck>,
@@ -21,19 +21,23 @@ Build-Depends: debhelper-compat (= 13),
                furo <!nodoc>,
                python3-typeshed,
                python3-psutil,
-               python3-mypy-extensions,
+               python3-mypy-extensions (>= 1.0.0),
                python3-typing-extensions (>= 4.10.0),
                python3-virtualenv <!nocheck>,
                python3-typeshed <!nocheck>,
-               python3-all-dev,
-               python3-tomli,
+               python3-all-dev:native,
+               libpython3-all-dev,
+               python3-tomli <!nocheck>,
                python3-venv <!nocheck>,
                python3-doc <!nodoc>,
                cython-doc <!nodoc>,
                python-six-doc <!nodoc>,
                python-setuptools-doc <!nodoc>,
-               python-attr-doc <!nodoc>
-Standards-Version: 4.6.2
+               python-attr-doc <!nodoc>,
+               python3-myst-parser <!nodoc>,
+               python3-sphinx-inline-tabs <!nodoc>,
+               python3-orjson [!i386 !alpha !hppa !m68k !sh4 !x32] <!nocheck>,
+Standards-Version: 4.7.0
 Vcs-Browser: https://salsa.debian.org/python-team/packages/mypy
 Vcs-Git: https://salsa.debian.org/python-team/packages/mypy.git
 Homepage: https://www.mypy-lang.org/
@@ -61,11 +65,11 @@ Multi-Arch: foreign
 Section: doc
 Depends: ${misc:Depends},
          ${sphinxdoc:Depends}
-Suggests: python3-doc,
-          cython-doc,
-          python-six-doc,
-          python-setuptools-doc,
-          python-attr-doc
+Recommends: python3-doc,
+            cython-doc,
+            python-six-doc,
+            python-setuptools-doc,
+            python-attr-doc
 Built-Using: ${sphinxdoc:Built-Using}
 Description: documentation for mypy
  Add type annotations to your Python programs, and use mypy to type check them.
@@ -83,11 +87,11 @@ Section: python
 Depends: ${misc:Depends},
          ${python3:Depends},
          ${shlibs:Depends},
-         python3-mypy-extensions,
-         python3-psutil,
-         python3-pkg-resources
-Recommends: python3-lxml,
-            python3-setuptools
+         python3-mypy-extensions (>= 1.0.0),
+         python3-psutil
+Recommends: python3-lxml (>= 4.9.1),
+            python3-setuptools,
+            python3-orjson [!i386 !alpha !hppa !m68k !sh4 !x32]
 Description: public modules for mypy (Python 3)
  Add type annotations to your Python programs, and use mypy to type check them.
  Mypy is essentially a Python linter on steroids, and it can catch many

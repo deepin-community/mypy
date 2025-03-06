@@ -1,11 +1,10 @@
-Metadata-Version: 2.1
+Metadata-Version: 2.2
 Name: mypy
-Version: 1.9.0
+Version: 1.15.0
 Summary: Optional static typing for Python
-Home-page: https://www.mypy-lang.org/
-Author: Jukka Lehtosalo
-Author-email: jukka.lehtosalo@iki.fi
+Author-email: Jukka Lehtosalo <jukka.lehtosalo@iki.fi>
 License: MIT
+Project-URL: Homepage, https://www.mypy-lang.org/
 Project-URL: Documentation, https://mypy.readthedocs.io/en/stable/index.html
 Project-URL: Repository, https://github.com/python/mypy
 Project-URL: Changelog, https://github.com/python/mypy/blob/master/CHANGELOG.md
@@ -15,15 +14,17 @@ Classifier: Environment :: Console
 Classifier: Intended Audience :: Developers
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Programming Language :: Python :: 3
-Classifier: Programming Language :: Python :: 3.8
 Classifier: Programming Language :: Python :: 3.9
 Classifier: Programming Language :: Python :: 3.10
 Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: Programming Language :: Python :: 3.13
 Classifier: Topic :: Software Development
 Classifier: Typing :: Typed
-Requires-Python: >=3.8
+Requires-Python: >=3.9
+Description-Content-Type: text/x-rst
 License-File: LICENSE
-Requires-Dist: typing_extensions>=4.1.0
+Requires-Dist: typing_extensions>=4.6.0
 Requires-Dist: mypy_extensions>=1.0.0
 Requires-Dist: tomli>=1.1.0; python_version < "3.11"
 Provides-Extra: dmypy
@@ -35,6 +36,8 @@ Provides-Extra: reports
 Requires-Dist: lxml; extra == "reports"
 Provides-Extra: install-types
 Requires-Dist: pip; extra == "install-types"
+Provides-Extra: faster-cache
+Requires-Dist: orjson; extra == "faster-cache"
 
 Mypy -- Optional Static Typing for Python
 =========================================

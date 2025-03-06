@@ -1,6 +1,5 @@
-pytest8.patch
-typing_extensions_4.10.patch
-self_check.patch
 hint-typeshed-package
 verbose
 intersphinx
+gnu-hurd-getsockname
+0005-pythoncapi_compat-don-t-define-Py_NULL-if-it-is-alre.patch

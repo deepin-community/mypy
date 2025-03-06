@@ -1,0 +1,2 @@
+# regenerate with "debian/rules download_remote_intersphinx_inventories"
+debian/intersphinx/monkeytype_objects.inv

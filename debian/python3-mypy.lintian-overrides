@@ -1,0 +1,3 @@
+# https://github.com/mypyc/mypyc/issues/704
+python3-mypy: shared-library-lacks-prerequisites [usr/lib/python3/dist-packages/mypy/*.so]
+python3-mypy: shared-library-lacks-prerequisites [usr/lib/python3/dist-packages/mypyc/*.so]

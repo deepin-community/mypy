@@ -1,3 +1,213 @@
+mypy (1.15.0-4) unstable; urgency=medium
+
+  * Team upload.
+  * Unset CFLAGS when running tests (closes: #1098578).
+
+ -- Colin Watson <cjwatson@debian.org>  Mon, 24 Feb 2025 16:40:29 +0000
+
+mypy (1.15.0-3) unstable; urgency=medium
+
+  * Added patch to fix the Python3.12 build with gcc-15. Closes:
+    #1097426
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Tue, 18 Feb 2025 01:40:12 +0100
+
+mypy (1.15.0-2.1) unstable; urgency=medium
+
+  * Non-maintainer upload.
+  * Add hurd-amd64 to list of architectures that use the multifile option
+
+ -- Mattias Ellert <mattias.ellert@physics.uu.se>  Mon, 17 Feb 2025 08:18:50 +0100
+
+mypy (1.15.0-2) unstable; urgency=medium
+
+  [ Mattias Ellert ]
+  * d/patches/gnu-hurd-getsockname: Address failing tests on GNU/Hurd
+    - https://github.com/python/mypy/pull/18630
+    (Closes: #1095420)
+  * d/rules: Fix x32 build by using multifile option
+  * d/rules: Use multifile option for all architectures that require reduced
+    memory usage during compilation for consistency
+    - i386 was using reduced the debug level instead
+    - hurd-i386 was using both, which was an overkill
+    - x32 was intending to use reduced debug level, but DEB_HOST_ARCH_CPU
+      on x32 is amd64 so the filter did not match
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Tue, 11 Feb 2025 16:07:42 +0100
+
+mypy (1.15.0-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Wed, 05 Feb 2025 08:50:46 +0100
+
+mypy (1.15~rc0.2-1) experimental; urgency=medium
+
+  * d/rules: added a build profile extension: pkg.mypy.multifile to speed up
+    compilation by enabling MYPYC_MULTI_FILE=1 even on architectures where
+    we don't normally do that.
+  * d/rules: added a build profile extension: pkg.mypy.o1 to speed up
+    compilation by enabling MYPYC_OPT_LEVEL=1 → -O1 instead of -O3
+  * d/rules: enable building the python extensions in parallel, respecting
+    DEB_BUILD_OPTIONS.
+  * d/salsa-ci.yml: Enable both of the speed-up build profiles to hopefully
+    finish the build within the 3 hour limit.
+  * Snapshot from upstream for experimental
+    https://github.com/python/mypy/commit/23d862dd6fbb905a69bcb31e88746dc7a1eb4a43
+  * Refreshed the patches
+  * d/control: added build-dependency on python3-sphinx-inline-tabs for
+    the docs
+  * mypyc: Install googletest and lib-rt/{setup.py,*.cc} to the correct locations.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Fri, 24 Jan 2025 10:21:23 +0100
+
+mypy (1.14.1-3) unstable; urgency=medium
+
+  * d/rules: use DEB_BUILD_OPTION_PARALLEL instead of "auto" for setting
+    the amount of parallel testing. Unbreaks the build on hurd-* where
+    psutil does not work.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Thu, 23 Jan 2025 09:24:57 +0100
+
+mypy (1.14.1-2) unstable; urgency=medium
+
+  * d/rules: Applied patch from Samuel Thibault to fix FTBFS on hurd-i386.
+    Closes: #1093423
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Tue, 21 Jan 2025 16:30:17 +0100
+
+mypy (1.14.1-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Wed, 01 Jan 2025 19:18:35 -0800
+
+mypy (1.14.0-1) unstable; urgency=medium
+
+  * New upstream version
+  * Standards-Version: 4.7.0 (routine-update)
+  * d/control: update build-depends, remove python3-wheel.
+  * Refreshed patches
+  * d/source/lintian-overrides: unneeded, removed
+  * testing: skip testDaemonStatusKillRestartRecheck
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Fri, 20 Dec 2024 19:46:11 -0800
+
+mypy (1.13.0-2) unstable; urgency=medium
+
+  * Team upload.
+  * drop Depends: python3-orjson on arches alongside i386 where it is
+    not available (rust is not available) [!alpha !hppa !m68k !sh4 !x32]
+    See Bug#1087727. Closes: #1087661, #1087662.
+
+ -- Drew Parsons <dparsons@debian.org>  Fri, 22 Nov 2024 19:57:54 +0100
+
+mypy (1.13.0-1) unstable; urgency=medium
+
+  * New upstream version
+  * Refreshed the patches
+  * recommend python3-orjson for a faster cache
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Wed, 23 Oct 2024 17:12:46 +0200
+
+mypy (1.12.1-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 21 Oct 2024 08:49:07 +0200
+
+mypy (1.12.0-1) unstable; urgency=medium
+
+  * New upstream version supports Python 3.13. Closes: #1081617
+  * d/control: docs now need python3-myst-parser
+  * d/control: adjust python dev build-deps to be more crossbuild
+    friendly.
+  * d/control: add some minimum versions to the {build-,}deps
+  * d/control: drop python3-pkg-resources dependency, it is unneeded.
+    Closes: #1083500
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 14 Oct 2024 14:06:23 +0200
+
+mypy (1.11.2-3) unstable; urgency=medium
+
+  * d/rules: adjust build flags for mips64el
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Sat, 07 Sep 2024 11:27:22 +0200
+
+mypy (1.11.2-2) unstable; urgency=medium
+
+  * d/tests/run-unit-test: also run the mypyc tests
+  * d/tests/run-unit-test: skip some tests that are not runnable post-
+    installation.
+  * d/tests/control: need g++ for mypyc tests
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Wed, 04 Sep 2024 15:09:45 +0200
+
+mypy (1.11.2-1) unstable; urgency=medium
+
+  * New upstream version
+  * d/patches: removed the patches that were cherry-picked from upstream
+    that are now apart of the new release.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 26 Aug 2024 09:31:14 +0900
+
+mypy (1.11.1-2) unstable; urgency=medium
+
+  * Upload to unstable.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Sun, 18 Aug 2024 11:55:57 +0200
+
+mypy (1.11.1-2~0exp1) experimental; urgency=medium
+
+  * d/rules: compile with less debugging on i386 to avoid running out of
+    virtual memory.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Fri, 16 Aug 2024 12:46:40 +0200
+
+mypy (1.11.1-2~0exp0) experimental; urgency=medium
+
+  * d/patches: cherry-pick 3 patches from upstream to fix a regression
+    found in SQLalchemy
+  * d/rules: add "-Wno-misleading-indentation" as there are too many
+    lines of autogenerated code to care about such a thing.
+  * Include snapshot of the sphinx objects from monkeytype.org, updated
+    intersphinx patch to use them to generate valid links to those external
+    docs.
+  * Silence many lintian warnings that have been reported upstream
+  * Also build the mypyc docs
+  * d/rules: compile with a normal debugging level: -g2
+  * Simplify the nodoc logic
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Wed, 14 Aug 2024 15:51:13 +0200
+
+mypy (1.11.1-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Wed, 31 Jul 2024 15:20:23 +0200
+
+mypy (1.11.0-1) unstable; urgency=medium
+
+  * New upstream version
+  * Refreshed intersphinx patch to link to the local docs.
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Mon, 22 Jul 2024 10:04:42 +0200
+
+mypy (1.10.1-1) unstable; urgency=medium
+
+  * New upstream version
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Tue, 25 Jun 2024 03:16:18 +0200
+
+mypy (1.10.0-1) unstable; urgency=medium
+
+  * New upstream version
+  * Remove patches applied upstream: self_check, typing_extensions_4.10, pytest8
+  * d/patches/intersphinx: updated path for cython3 & six docs
+  * d/control: mypy-doc, bump suggests to recommends
+
+ -- Michael R. Crusoe <crusoe@debian.org>  Wed, 24 Apr 2024 17:13:26 +0300
+
 mypy (1.9.0-4) unstable; urgency=medium
 
   * d/{tests/,}control: Pin the minimum version of pytest

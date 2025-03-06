@@ -1,11 +1,21 @@
-Author: Michael R. Crusoe <crusoe@debian.org>
+From: "Michael R. Crusoe" <crusoe@debian.org>
+Date: Wed, 14 Aug 2024 15:44:10 +0200
+Subject: point to python3-typeshed package for missing types
+
 Co-authored-by: Markus Demleitner <msdemlei@fsfe.org>
 Forwarded: not-needed
-Description: point to python3-typeshed package for missing types
+---
+ mypy/modulefinder.py                     | 4 +++-
+ test-data/unit/check-errorcodes.test     | 2 +-
+ test-data/unit/check-modules.test        | 2 +-
+ test-data/unit/fine-grained-modules.test | 4 ++--
+ 4 files changed, 7 insertions(+), 5 deletions(-)
 
---- mypy.orig/mypy/modulefinder.py
-+++ mypy/mypy/modulefinder.py
-@@ -83,7 +83,9 @@
+diff --git a/mypy/modulefinder.py b/mypy/modulefinder.py
+index 61dbb6c..8b9e5ff 100644
+--- a/mypy/modulefinder.py
++++ b/mypy/modulefinder.py
+@@ -102,7 +102,9 @@ class ModuleNotFoundReason(Enum):
              notes = [doc_link]
          elif self is ModuleNotFoundReason.APPROVED_STUBS_NOT_INSTALLED:
              msg = 'Library stubs not installed for "{module}"'
@@ -16,9 +26,37 @@ Description: point to python3-typeshed package for missing types
              if not daemon:
                  notes.append(
                      '(or run "mypy --install-types" to install all missing stub packages)'
---- mypy.orig/test-data/unit/fine-grained-modules.test
-+++ mypy/test-data/unit/fine-grained-modules.test
-@@ -2199,12 +2199,12 @@
+diff --git a/test-data/unit/check-errorcodes.test b/test-data/unit/check-errorcodes.test
+index 2940386..eec7649 100644
+--- a/test-data/unit/check-errorcodes.test
++++ b/test-data/unit/check-errorcodes.test
+@@ -523,7 +523,7 @@ if int() is str():  # E: Non-overlapping identity check (left operand type: "int
+ 
+ [case testErrorCodeMissingModule]
+ from defusedxml import xyz  # E: Library stubs not installed for "defusedxml"  [import-untyped] \
+-                            # N: Hint: "python3 -m pip install types-defusedxml" \
++                            # N: Hint: On Debian systems, you can install the python3-typeshed package to provide mypy with stubs for many popular libraries. In virtual Python environments, you can instead run "python3 -m pip install types-defusedxml". \
+                             # N: (or run "mypy --install-types" to install all missing stub packages)
+ from nonexistent import foobar  # E: Cannot find implementation or library stub for module named "nonexistent"  [import-not-found]
+ import nonexistent2  # E: Cannot find implementation or library stub for module named "nonexistent2"  [import-not-found]
+diff --git a/test-data/unit/check-modules.test b/test-data/unit/check-modules.test
+index bee0984..e4e9f56 100644
+--- a/test-data/unit/check-modules.test
++++ b/test-data/unit/check-modules.test
+@@ -3130,7 +3130,7 @@ import google.non_existent  # E: Cannot find implementation or library stub for
+ from google.non_existent import x
+ 
+ import google.cloud.ndb  # E: Library stubs not installed for "google.cloud.ndb" \
+-                         # N: Hint: "python3 -m pip install types-google-cloud-ndb" \
++                         # N: Hint: On Debian systems, you can install the python3-typeshed package to provide mypy with stubs for many popular libraries. In virtual Python environments, you can instead run "python3 -m pip install types-google-cloud-ndb". \
+                          # N: (or run "mypy --install-types" to install all missing stub packages) \
+                          # N: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
+ from google.cloud import ndb
+diff --git a/test-data/unit/fine-grained-modules.test b/test-data/unit/fine-grained-modules.test
+index f28dbaa..6273fbf 100644
+--- a/test-data/unit/fine-grained-modules.test
++++ b/test-data/unit/fine-grained-modules.test
+@@ -2199,12 +2199,12 @@ import requests
  import jack
  [out]
  a.py:1: error: Library stubs not installed for "requests"
@@ -33,23 +71,3 @@ Description: point to python3-typeshed package for missing types
  a.py:1: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
  
  [case testIgnoreErrorsFromTypeshed]
---- mypy.orig/test-data/unit/check-modules.test
-+++ mypy/test-data/unit/check-modules.test
-@@ -3130,7 +3130,7 @@
- from google.non_existent import x
- 
- import google.cloud.ndb  # E: Library stubs not installed for "google.cloud.ndb" \
--                         # N: Hint: "python3 -m pip install types-google-cloud-ndb" \
-+                         # N: Hint: On Debian systems, you can install the python3-typeshed package to provide mypy with stubs for many popular libraries. In virtual Python environments, you can instead run "python3 -m pip install types-google-cloud-ndb". \
-                          # N: (or run "mypy --install-types" to install all missing stub packages) \
-                          # N: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
- from google.cloud import ndb
-@@ -3141,7 +3141,7 @@
- [file bleach/__init__.pyi]
- [out]
- main:1: error: Library stubs not installed for "bleach.xyz"
--main:1: note: Hint: "python3 -m pip install types-bleach"
-+main:1: note: Hint: On Debian systems, you can install the python3-typeshed package to provide mypy with stubs for many popular libraries. In virtual Python environments, you can instead run "python3 -m pip install types-bleach".
- main:1: note: (or run "mypy --install-types" to install all missing stub packages)
- main:1: note: See https://mypy.readthedocs.io/en/stable/running_mypy.html#missing-imports
- main:2: error: Library stubs not installed for "bleach.abc"

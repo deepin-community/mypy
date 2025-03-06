@@ -4,37 +4,30 @@ Subject: link to local documenatin
 
 Forwarded: not-needed
 ---
- docs/source/conf.py | 19 ++++++++++++++-----
- 1 file changed, 14 insertions(+), 5 deletions(-)
+ docs/source/conf.py | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
 diff --git a/docs/source/conf.py b/docs/source/conf.py
-index 683b2a6..f4016c6 100644
+index 79a5c06..8d2b84e 100644
 --- a/docs/source/conf.py
 +++ b/docs/source/conf.py
-@@ -265,12 +265,21 @@ texinfo_documents = [
+@@ -276,11 +276,14 @@ texinfo_documents = [
  rst_prolog = ".. |...| unicode:: U+2026   .. ellipsis\n"
  
  intersphinx_mapping = {
 -    "python": ("https://docs.python.org/3", None),
--    "six": ("https://six.readthedocs.io", None),
 -    "attrs": ("https://www.attrs.org/en/stable/", None),
 -    "cython": ("https://docs.cython.org/en/latest", None),
-+    "python": (
-+        "https://docs.python.org/3",
-+        f"/usr/share/doc/python{sys.version_info.major}.{sys.version_info.minor}/html/objects.inv",
-+    ),
-+    "six": ("https://six.readthedocs.io", "/usr/share/doc/python-six-doc/html/objects.inv"),
-+    "attrs": (
-+        "https://www.attrs.org/en/stable",
-+        "/usr/share/doc/python-attr-doc/html/objects.inv",
-+    ),
-+    "cython": ("https://docs.cython.org/en/latest", "/usr/share/doc/cython-doc/html/objects.inv"),
-     "monkeytype": ("https://monkeytype.readthedocs.io/en/latest", None),
+-    "monkeytype": ("https://monkeytype.readthedocs.io/en/latest", None),
 -    "setuptools": ("https://setuptools.readthedocs.io/en/latest", None),
-+    "setuptools": (
-+        "https://setuptools.readthedocs.io/en/latest",
-+        "/usr/share/doc/python-setuptools-doc/html/objects.inv",
++    "python": ("/usr/share/doc/python3/html/", None),
++    "attrs": ("/usr/share/doc/python-attr-doc/html/", None),
++    "cython": ("/usr/share/doc/cython3/html/", None),
++    "monkeytype": (
++        "https://monkeytype.readthedocs.io/en/latest",
++        "../../debian/intersphinx/monkeytype_objects.inv"
 +    ),
++    "setuptools": ("/usr/share/doc/python-setuptools-doc/html/", None),
  }
  
  

@@ -1,0 +1,25 @@
+From: Mattias Ellert <mattias.ellert@physics.uu.se>
+Date: Fri, 7 Feb 2025 15:44:22 +0100
+Subject: [PATCH] GNU/Hurd returns empty string from getsockname() for AF_UNIX
+ sockets
+
+Build the socket name from directory name and name instead.
+---
+ mypy/ipc.py | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/mypy/ipc.py b/mypy/ipc.py
+index 991f9ac..b2046a4 100644
+--- a/mypy/ipc.py
++++ b/mypy/ipc.py
+@@ -303,6 +303,10 @@ class IPCServer(IPCBase):
+     def connection_name(self) -> str:
+         if sys.platform == "win32":
+             return self.name
++        elif sys.platform == "gnu0":
++            # GNU/Hurd returns empty string from getsockname()
++            # for AF_UNIX sockets
++            return os.path.join(self.sock_directory, self.name)
+         else:
+             name = self.sock.getsockname()
+             assert isinstance(name, str)

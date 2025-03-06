@@ -27,6 +27,9 @@ if sys.platform != "win32":
 
 if sys.platform == "darwin":
     CLOCK_UPTIME_RAW: int
+    if sys.version_info >= (3, 13):
+        CLOCK_UPTIME_RAW_APPROX: int
+        CLOCK_MONOTONIC_RAW_APPROX: int
 
 if sys.version_info >= (3, 9) and sys.platform == "linux":
     CLOCK_TAI: int
@@ -39,6 +42,7 @@ if sys.version_info >= (3, 9) and sys.platform == "linux":
 class struct_time(structseq[Any | int], _TimeTuple):
     if sys.version_info >= (3, 10):
         __match_args__: Final = ("tm_year", "tm_mon", "tm_mday", "tm_hour", "tm_min", "tm_sec", "tm_wday", "tm_yday", "tm_isdst")
+
     @property
     def tm_year(self) -> int: ...
     @property
@@ -93,7 +97,7 @@ if sys.platform != "win32":
     def clock_settime(clk_id: int, time: float, /) -> None: ...  # Unix only
 
 if sys.platform != "win32":
-    def clock_gettime_ns(clock_id: int, /) -> int: ...
+    def clock_gettime_ns(clk_id: int, /) -> int: ...
     def clock_settime_ns(clock_id: int, time: int, /) -> int: ...
 
 if sys.platform == "linux":

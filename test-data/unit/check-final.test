@@ -194,6 +194,7 @@ def g(x: int) -> Final[int]: ...  # E: Final can be only used as an outermost qu
 [out]
 
 [case testFinalDefiningNotInMethodExtensions]
+# flags: --python-version 3.14
 from typing_extensions import Final
 
 def f(x: Final[int]) -> int: ...  # E: Final can be only used as an outermost qualifier in a variable annotation
@@ -297,6 +298,50 @@ class P(Protocol):
     @final  # E: Protocol member cannot be final
     def other(self, x):
         pass
+[out]
+
+[case testFinalInProtocol]
+from typing import Final, Protocol, final
+
+class P(Protocol):
+    var1 : Final[int] = 0 # E: Protocol member cannot be final
+
+    @final # E: Protocol member cannot be final
+    def meth1(self) -> None:
+        var2: Final = 0
+
+    def meth2(self) -> None:
+        var3: Final = 0
+
+    def meth3(self) -> None:
+        class Inner:
+            var3: Final = 0  # OK
+
+            @final
+            def inner(self) -> None: ...
+
+    class Inner:
+        var3: Final = 0  # OK
+
+        @final
+        def inner(self) -> None: ...
+
+[out]
+
+[case testFinalWithClassVarInProtocol]
+from typing import Protocol, Final, final, ClassVar
+
+class P(Protocol):
+    var1 : Final[ClassVar[int]] = 0 # E: Variable should not be annotated with both ClassVar and Final
+    var2: ClassVar[int] = 1
+
+    @final # E: Protocol member cannot be final
+    def meth1(self) -> None:
+        ...
+
+    def meth2(self) -> None:
+        var3: Final[ClassVar[int]] = 0 # E: Variable should not be annotated with both ClassVar and Final # E: ClassVar can only be used for assignments in class body
+
 [out]
 
 [case testFinalNotInLoops]
@@ -1084,6 +1129,7 @@ class A:
 [builtins fixtures/tuple.pyi]
 
 [case testFinalUsedWithClassVar]
+# flags: --python-version 3.12
 from typing import Final, ClassVar
 
 class A:
@@ -1091,6 +1137,15 @@ class A:
     b: ClassVar[Final[int]]  # E: Final can be only used as an outermost qualifier in a variable annotation
     c: ClassVar[Final] = 1  # E: Final can be only used as an outermost qualifier in a variable annotation
 [out]
+
+[case testFinalUsedWithClassVarAfterPy313]
+# flags: --python-version 3.13
+from typing import Final, ClassVar
+
+class A:
+    a: Final[ClassVar[int]] = 1
+    b: ClassVar[Final[int]] = 1
+    c: ClassVar[Final] = 1
 
 [case testFinalClassWithAbstractMethod]
 from typing import final

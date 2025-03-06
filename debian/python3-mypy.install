@@ -1,0 +1,3 @@
+mypyc/lib-rt/setup.py usr/lib/python3/dist-packages/mypyc/lib-rt
+mypyc/lib-rt/*.cc usr/lib/python3/dist-packages/mypyc/lib-rt
+mypyc/external/googletest usr/lib/python3/dist-packages/mypyc/external
